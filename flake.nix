@@ -1,5 +1,5 @@
 {
-  description = "";
+  description = "Powermenu in rust and relm4";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
@@ -15,7 +15,13 @@
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [];
       systems = ["x86_64-linux"];
-      perSystem = {system, ...}: let
+      perSystem = {
+        system,
+        lib,
+        ...
+      }: let
+        # Manifest via Cargo.toml
+        manifest = (lib.importTOML ./Cargo.toml).package;
         pkgs = import nixpkgs {
           inherit system;
 
@@ -25,14 +31,42 @@
       in {
         formatter.default = pkgs.alejandra;
         devShells.default = pkgs.mkShell {
-          name = "taskbane";
+          name = "${manifest.name}";
 
-          buildInputs = with pkgs; [
+          nativeBuildInputs = with pkgs; [
             cargo
             cargo-generate
+            cargo-watch
+            clippy
             rustc
             rustfmt
+
+            openssl
+
+            gtk4
+            meson
+            ninja
+            parted
+            gettext
+            appstream
+            pkg-config
+            gdk-pixbuf
+            libadwaita
+            gnome-desktop
+            wrapGAppsHook4
+            desktop-file-utils
+            gobject-introspection
+            rustPlatform.bindgenHook
           ];
+
+          LD_LIBRARY_PATH = lib.makeLibraryPath (with pkgs; [gcc libiconv llvmPackages.llvm]);
+          LIBCLANG_PATH = lib.makeLibraryPath [pkgs.libclang];
+          NIX_LDFLAGS = "-L${pkgs.libiconv}/lib";
+
+          # Set Environment Variables
+          RUST_BACKTRACE = "full";
+          RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+          GIO_MODULE_DIR="${pkgs.glib-networking}/lib/gio/modules";
 
           shellHook = ''
             function menu () {
@@ -44,6 +78,7 @@
               echo
             }
 
+            export GIO_MODULE_DIR="${pkgs.glib-networking}/lib/gio/modules"
             menu
             just --list
           '';
