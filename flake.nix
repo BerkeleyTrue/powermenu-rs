@@ -44,6 +44,7 @@
             openssl
 
             gtk4
+            gtk4-layer-shell
             meson
             ninja
             parted
@@ -66,7 +67,7 @@
           # Set Environment Variables
           RUST_BACKTRACE = "full";
           RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
-          GIO_MODULE_DIR="${pkgs.glib-networking}/lib/gio/modules";
+          GIO_MODULE_DIR = "${pkgs.glib-networking}/lib/gio/modules";
 
           shellHook = ''
             function menu () {
