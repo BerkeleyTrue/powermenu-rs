@@ -1,13 +1,7 @@
 use gtk4_layer_shell::{Layer, LayerShell};
 use relm4::{
-    ComponentParts, ComponentSender, SimpleComponent,
-    gtk::{
-        self,
-        gdk::Key,
-        gio::prelude::ApplicationExt,
-        glib,
-        prelude::{GtkWindowExt, OrientableExt, WidgetExt},
-    },
+    ComponentParts, ComponentSender, RelmWidgetExt, SimpleComponent,
+    gtk::{self, gdk::Key, gio::prelude::ApplicationExt, glib, prelude::*},
 };
 use tracing::info;
 
@@ -26,7 +20,7 @@ impl SimpleComponent for AppModel {
     view! {
         gtk::Window {
             set_title: Some("PowerMenu"),
-            set_default_width: 300,
+            set_default_width: 600,
             set_default_height: 300,
 
             connect_close_request[sender] => move |_| {
@@ -43,9 +37,44 @@ impl SimpleComponent for AppModel {
             },
 
             gtk::Box {
-                set_orientation: gtk::Orientation::Horizontal,
-                gtk::Label {
-                    set_label: "Power",
+                set_orientation: gtk::Orientation::Vertical,
+                set_spacing: 12,
+                set_margin_all: 12,
+
+                gtk::FlowBox {
+                    set_valign: gtk::Align::Start,
+                    set_max_children_per_line: 5,
+                    set_min_children_per_line: 2,
+                    set_selection_mode: gtk::SelectionMode::Single,
+                    set_homogeneous: true,
+                    set_row_spacing: 6,
+                    set_column_spacing: 6,
+
+                    gtk::Box {
+                        gtk::Label {
+                            set_label: "Lock",
+                        }
+                    },
+                    gtk::Box {
+                        gtk::Label {
+                            set_label: "sleep",
+                        }
+                    },
+                    gtk::Box {
+                        gtk::Label {
+                            set_label: "logout",
+                        }
+                    },
+                    gtk::Box {
+                        gtk::Label {
+                            set_label: "shutdown",
+                        }
+                    },
+                    gtk::Box {
+                        gtk::Label {
+                            set_label: "restart",
+                        }
+                    }
                 }
             }
         }
@@ -65,7 +94,7 @@ impl SimpleComponent for AppModel {
         let key_controller = gtk::EventControllerKey::new();
         key_controller.connect_key_pressed(move |_, key, _, _| {
             info!("key pressed {:?}", key);
-            if key == Key::Q {
+            if key == Key::Q || key == Key::Escape {
                 sender.input(AppMessage::QuitApp);
                 glib::Propagation::Stop
             } else {
