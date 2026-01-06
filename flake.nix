@@ -59,6 +59,10 @@
             desktop-file-utils
             gobject-introspection
             rustPlatform.bindgenHook
+            gst_all_1.gstreamer
+            gst_all_1.gst-plugins-base
+            gst_all_1.gst-plugins-good
+            gst_all_1.gst-libav
           ];
 
           LD_LIBRARY_PATH = lib.makeLibraryPath (with pkgs; [gcc libiconv llvmPackages.llvm]);

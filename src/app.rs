@@ -1,13 +1,15 @@
 use gtk4_layer_shell::{Layer, LayerShell};
 use relm4::{
-    ComponentParts, ComponentSender, RelmWidgetExt, SimpleComponent,
     gtk::{self, gdk::Key, gio::prelude::ApplicationExt, glib, prelude::*},
+    prelude::*,
 };
 use tracing::info;
 
-use crate::icon_names;
+use crate::{dead_internet::DeadInternet, icon_names};
 
-pub struct AppModel {}
+pub struct AppModel {
+    dead_internet: Controller<DeadInternet>,
+}
 
 #[derive(Debug)]
 pub enum AppMessage {
@@ -16,7 +18,7 @@ pub enum AppMessage {
 
 #[relm4::component(pub)]
 impl SimpleComponent for AppModel {
-    type Init = u8;
+    type Init = ();
     type Input = AppMessage;
     type Output = ();
     view! {
@@ -42,6 +44,11 @@ impl SimpleComponent for AppModel {
                 set_orientation: gtk::Orientation::Vertical,
                 set_spacing: 12,
                 set_margin_all: 12,
+
+                #[local_ref]
+                dead_internet -> gtk::Picture {
+                    set_size_request: (200, 200),
+                },
 
                 gtk::FlowBox {
                     set_valign: gtk::Align::Start,
@@ -87,8 +94,14 @@ impl SimpleComponent for AppModel {
         root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let model = AppModel {};
+        let dead_internat_video = DeadInternet::builder().launch(()).detach();
+        let model = AppModel {
+            dead_internet: dead_internat_video,
+        };
+
+        let dead_internet = model.dead_internet.widget();
         let widgets = view_output!();
+
         root.init_layer_shell();
         root.set_layer(Layer::Overlay);
         root.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::OnDemand);
@@ -96,7 +109,7 @@ impl SimpleComponent for AppModel {
         let key_controller = gtk::EventControllerKey::new();
         key_controller.connect_key_pressed(move |_, key, _, _| {
             info!("key pressed {:?}", key);
-            if key == Key::Q || key == Key::Escape {
+            if key == Key::q || key == Key::Escape {
                 sender.input(AppMessage::QuitApp);
                 glib::Propagation::Stop
             } else {

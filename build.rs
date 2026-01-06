@@ -1,4 +1,22 @@
+use std::process::Command;
+
 fn main() {
+    // Compile GResource for video/media assets
+    let out_dir = std::env::var("OUT_DIR").unwrap();
+    let status = Command::new("glib-compile-resources")
+        .arg("--sourcedir=resources")
+        .arg(&format!("--target={}/resources.gresource", out_dir))
+        .arg("resources/resources.gresource.xml")
+        .status()
+        .expect("Failed to run glib-compile-resources");
+
+    if !status.success() {
+        panic!("glib-compile-resources failed");
+    }
+
+    println!("cargo:rerun-if-changed=resources/resources.gresource.xml");
+    println!("cargo:rerun-if-changed=resources/redlotoo_dead-internet.mp4");
+
     relm4_icons_build::bundle_icons(
         // Name of the file that will be generated at `OUT_DIR`
         "icon_names.rs",
