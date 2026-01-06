@@ -53,6 +53,7 @@
             pkg-config
             gdk-pixbuf
             libadwaita
+            librsvg
             gnome-desktop
             wrapGAppsHook4
             desktop-file-utils

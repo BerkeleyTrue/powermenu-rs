@@ -5,6 +5,8 @@ use relm4::{
 };
 use tracing::info;
 
+use crate::icon_names;
+
 pub struct AppModel {}
 
 #[derive(Debug)]
@@ -51,28 +53,28 @@ impl SimpleComponent for AppModel {
                     set_column_spacing: 6,
 
                     gtk::Box {
-                        gtk::Label {
-                            set_label: "Lock",
+                        gtk::Button {
+                            set_icon_name: icon_names::ROTATION_LOCK,
                         }
                     },
                     gtk::Box {
-                        gtk::Label {
-                            set_label: "sleep",
+                        gtk::Button {
+                            set_icon_name: icon_names::MOON_OUTLINE,
                         }
                     },
                     gtk::Box {
-                        gtk::Label {
-                            set_label: "logout",
+                        gtk::Button {
+                            set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
                         }
                     },
                     gtk::Box {
-                        gtk::Label {
-                            set_label: "shutdown",
+                        gtk::Button {
+                            set_icon_name: icon_names::TURN_OFF,
                         }
                     },
                     gtk::Box {
-                        gtk::Label {
-                            set_label: "restart",
+                        gtk::Button {
+                            set_icon_name: icon_names::ARROW_INTO_BOX,
                         }
                     }
                 }
