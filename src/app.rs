@@ -15,12 +15,17 @@ pub struct InitApp {
 }
 
 pub struct AppModel {
-    no_focus: bool,
     dead_internet: Controller<DeadInternet>,
 }
 
 #[derive(Debug)]
 pub enum AppMessage {
+    Lock,
+    Sleep,
+    Shutdown,
+    Reboot,
+    Logout,
+
     QuitApp,
 }
 
@@ -74,22 +79,27 @@ impl SimpleComponent for AppModel {
                     gtk::Button {
                         add_css_class: "btn",
                         set_icon_name: icon_names::ROTATION_LOCK,
+                        connect_clicked => AppMessage::Lock,
                     },
                     gtk::Button {
                         add_css_class: "btn",
                         set_icon_name: icon_names::MOON_OUTLINE,
+                        connect_clicked => AppMessage::Sleep,
                     },
                     gtk::Button {
                         add_css_class: "btn",
                         set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
+                        connect_clicked => AppMessage::Reboot,
                     },
                     gtk::Button {
                         add_css_class: "btn",
                         set_icon_name: icon_names::TURN_OFF,
+                        connect_clicked => AppMessage::Shutdown,
                     },
                     gtk::Button {
                         add_css_class: "btn",
                         set_icon_name: icon_names::ARROW_INTO_BOX,
+                        connect_clicked => AppMessage::Logout,
                     }
                 }
             }
@@ -103,7 +113,6 @@ impl SimpleComponent for AppModel {
     ) -> ComponentParts<Self> {
         let dead_internat_video = DeadInternet::builder().launch(()).detach();
         let model = AppModel {
-            no_focus: init.no_focus,
             dead_internet: dead_internat_video,
         };
 
@@ -132,6 +141,21 @@ impl SimpleComponent for AppModel {
         match message {
             AppMessage::QuitApp => {
                 relm4::main_application().quit();
+            }
+            AppMessage::Lock => {
+                info!("Lock Request");
+            }
+            AppMessage::Sleep => {
+                info!("Sleep Request");
+            }
+            AppMessage::Reboot => {
+                info!("Reboot Request");
+            }
+            AppMessage::Shutdown => {
+                info!("Shutdown Request");
+            }
+            AppMessage::Logout => {
+                info!("Logout request");
             }
         }
     }

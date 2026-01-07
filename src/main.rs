@@ -41,8 +41,13 @@ fn load_css() {
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Cli {
+    /// don't quite on focus lost
     #[arg(short, long)]
     no_focus: bool,
+
+    /// don't run commands, echo them out instead
+    #[arg(short, long)]
+    dryrun: bool,
 
     #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
     gtk_options: Vec<String>,
@@ -50,9 +55,11 @@ struct Cli {
 
 fn main() {
     let args = Cli::parse();
-    debug!("cli args {:?}", &args);
     let program_invoc = std::env::args().next().unwrap();
     let mut gtk_args = vec![program_invoc];
+
+    debug!("cli args {:?}", &args);
+
     gtk_args.extend(args.gtk_options.clone());
 
     // initialize tracing
