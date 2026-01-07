@@ -5,12 +5,14 @@ mod icon_names {
 mod app;
 mod dead_internet;
 
+use clap::Parser;
 use gtk4::{
     CssProvider, STYLE_PROVIDER_PRIORITY_APPLICATION, STYLE_PROVIDER_PRIORITY_USER, gdk::Display,
 };
 use relm4::{RelmApp, gtk};
+use tracing::debug;
 
-use crate::app::AppModel;
+use crate::app::{AppModel, InitApp};
 
 fn load_css() {
     let default_provider = CssProvider::new();
@@ -36,7 +38,23 @@ fn load_css() {
     );
 }
 
+#[derive(Parser, Debug)]
+#[command(version, about)]
+struct Cli {
+    #[arg(short, long)]
+    no_focus: bool,
+
+    #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+    gtk_options: Vec<String>,
+}
+
 fn main() {
+    let args = Cli::parse();
+    debug!("cli args {:?}", &args);
+    let program_invoc = std::env::args().next().unwrap();
+    let mut gtk_args = vec![program_invoc];
+    gtk_args.extend(args.gtk_options.clone());
+
     // initialize tracing
     tracing_subscriber::fmt::init();
     relm4_icons::initialize_icons(icon_names::GRESOURCE_BYTES, icon_names::RESOURCE_PREFIX);
@@ -46,5 +64,7 @@ fn main() {
     gtk::init().unwrap();
 
     let app = RelmApp::new("com.bt.powermenu");
-    app.run::<AppModel>(());
+    app.with_args(gtk_args).run::<AppModel>(InitApp{
+        no_focus: args.no_focus
+    });
 }

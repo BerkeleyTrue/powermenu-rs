@@ -10,7 +10,12 @@ use crate::{dead_internet::DeadInternet, icon_names};
 const WIDTH: i32 = 623;
 const HEIGHT: i32 = 390;
 
+pub struct InitApp {
+    pub no_focus: bool,
+}
+
 pub struct AppModel {
+    no_focus: bool,
     dead_internet: Controller<DeadInternet>,
 }
 
@@ -21,7 +26,7 @@ pub enum AppMessage {
 
 #[relm4::component(pub)]
 impl SimpleComponent for AppModel {
-    type Init = ();
+    type Init = InitApp;
     type Input = AppMessage;
     type Output = ();
     view! {
@@ -38,10 +43,12 @@ impl SimpleComponent for AppModel {
                 gtk::glib::Propagation::Stop
             },
 
-            connect_is_active_notify[sender] => move |window| {
+            connect_is_active_notify[sender, no_focus = init.no_focus] => move |window| {
                 if !window.is_active() {
                     info!("lost focus");
-                    sender.input(AppMessage::QuitApp);
+                    if !no_focus {
+                        sender.input(AppMessage::QuitApp);
+                    }
                 }
             },
 
@@ -90,12 +97,13 @@ impl SimpleComponent for AppModel {
     }
 
     fn init(
-        _init: Self::Init,
+        init: Self::Init,
         root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let dead_internat_video = DeadInternet::builder().launch(()).detach();
         let model = AppModel {
+            no_focus: init.no_focus,
             dead_internet: dead_internat_video,
         };
 
