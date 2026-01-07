@@ -7,6 +7,9 @@ use tracing::info;
 
 use crate::{dead_internet::DeadInternet, icon_names};
 
+const WIDTH: i32 = 623;
+const HEIGHT: i32 = 390;
+
 pub struct AppModel {
     dead_internet: Controller<DeadInternet>,
 }
@@ -24,8 +27,9 @@ impl SimpleComponent for AppModel {
     view! {
         gtk::Window {
             set_title: Some("PowerMenu"),
-            set_default_width: 600,
-            set_default_height: 300,
+            set_default_width: WIDTH,
+            set_default_height: HEIGHT,
+            set_margin_all: 0,
 
             connect_close_request[sender] => move |_| {
                 info!("close request");
@@ -40,17 +44,16 @@ impl SimpleComponent for AppModel {
                 }
             },
 
-            gtk::Box {
-                set_orientation: gtk::Orientation::Vertical,
-                set_spacing: 12,
-                set_margin_all: 12,
-
+            gtk::Overlay {
                 #[local_ref]
                 dead_internet -> gtk::Picture {
-                    set_size_request: (200, 200),
+                    // set_size_request: (WIDTH, HEIGHT),
+                    set_hexpand: true,
+                    set_vexpand: true,
+                    set_content_fit: gtk::ContentFit::Cover,
                 },
 
-                gtk::FlowBox {
+                add_overlay = &gtk::FlowBox {
                     set_valign: gtk::Align::Start,
                     set_max_children_per_line: 5,
                     set_min_children_per_line: 2,
@@ -58,6 +61,7 @@ impl SimpleComponent for AppModel {
                     set_homogeneous: true,
                     set_row_spacing: 6,
                     set_column_spacing: 6,
+                    // set_margin_all: 12,
 
                     gtk::Box {
                         gtk::Button {

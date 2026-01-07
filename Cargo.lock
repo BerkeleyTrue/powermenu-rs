@@ -704,6 +704,7 @@ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 name = "powermenu-rs"
 version = "0.1.0"
 dependencies = [
+ "gtk4",
  "gtk4-layer-shell",
  "relm4",
  "relm4-components",

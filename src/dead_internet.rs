@@ -2,6 +2,7 @@ use relm4::{
     gtk::{self, gio, glib, prelude::*},
     prelude::*,
 };
+use tracing::error;
 
 // embeds resource
 pub const GRESOURCE_BYTES: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/resources.gresource"));
@@ -50,7 +51,7 @@ impl SimpleComponent for DeadInternet {
         // Debug: check for errors
         media.connect_error_notify(|media| {
             if let Some(error) = media.error() {
-                eprintln!("MediaFile error: {}", error);
+                error!("MediaFile error: {:?}", error);
             }
         });
         media.set_loop(true);
