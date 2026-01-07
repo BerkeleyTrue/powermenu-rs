@@ -76,30 +76,50 @@ impl SimpleComponent for AppModel {
                     set_column_spacing: 6,
                     set_margin_all: 12,
 
-                    gtk::Button {
-                        add_css_class: "btn",
-                        set_icon_name: icon_names::ROTATION_LOCK,
-                        connect_clicked => AppMessage::Lock,
+                    gtk::FlowBoxChild {
+                        set_focusable: false,
+
+                        gtk::Button {
+                            add_css_class: "btn",
+                            set_icon_name: icon_names::ROTATION_LOCK,
+                            connect_clicked => AppMessage::Lock,
+                        }
                     },
-                    gtk::Button {
-                        add_css_class: "btn",
-                        set_icon_name: icon_names::MOON_OUTLINE,
-                        connect_clicked => AppMessage::Sleep,
+                    gtk::FlowBoxChild {
+                        set_focusable: false,
+
+                        gtk::Button {
+                            add_css_class: "btn",
+                            set_icon_name: icon_names::MOON_OUTLINE,
+                            connect_clicked => AppMessage::Sleep,
+                        }
                     },
-                    gtk::Button {
-                        add_css_class: "btn",
-                        set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
-                        connect_clicked => AppMessage::Reboot,
+                    gtk::FlowBoxChild {
+                        set_focusable: false,
+
+                        gtk::Button {
+                            add_css_class: "btn",
+                            set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
+                            connect_clicked => AppMessage::Reboot,
+                        },
                     },
-                    gtk::Button {
-                        add_css_class: "btn",
-                        set_icon_name: icon_names::TURN_OFF,
-                        connect_clicked => AppMessage::Shutdown,
+                    gtk::FlowBoxChild {
+                        set_focusable: false,
+
+                        gtk::Button {
+                            add_css_class: "btn",
+                            set_icon_name: icon_names::TURN_OFF,
+                            connect_clicked => AppMessage::Shutdown,
+                        },
                     },
-                    gtk::Button {
-                        add_css_class: "btn",
-                        set_icon_name: icon_names::ARROW_INTO_BOX,
-                        connect_clicked => AppMessage::Logout,
+                    gtk::FlowBoxChild {
+                        set_focusable: false,
+
+                        gtk::Button {
+                            add_css_class: "btn",
+                            set_icon_name: icon_names::ARROW_INTO_BOX,
+                            connect_clicked => AppMessage::Logout,
+                        }
                     }
                 }
             }
