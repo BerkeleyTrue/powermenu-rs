@@ -55,6 +55,7 @@ flowboxchild:focus-visible {
   border-radius: 8px;
   border: none;
   color: @mantle;
+  box-shadow: 1px 1px 2px 2px @surface0;
 }
 
 .btn:focus,
@@ -68,36 +69,46 @@ flowboxchild:focus-visible .btn {
 }
 
 flowboxchild:nth-child(1) .btn {
-  background: linear-gradient(145deg, @lavender, @lavender 60%, @mauve);
+  background: linear-gradient(145deg, @lavender, @lavender 80%, @mauve);
 }
 flowboxchild:nth-child(1):hover .btn {
-  background: linear-gradient(145deg, @blue , @blue 60%, @sapphire);
+  background: linear-gradient(145deg, @blue , @blue 80%, @sapphire);
 }
 
 flowboxchild:nth-child(2) .btn {
-  background: linear-gradient(157deg, @lavender, @lavender 60%, @mauve);
+  background: linear-gradient(157deg, @lavender, @lavender 80%, @mauve);
 }
 flowboxchild:nth-child(2):hover .btn {
-  background: linear-gradient(157deg, @blue, @blue 60%, @sapphire);
+  background: linear-gradient(157deg, @blue, @blue 80%, @sapphire);
 }
 
 flowboxchild:nth-child(3) .btn {
-  background: linear-gradient(180deg, @lavender, @lavender 60%, @mauve);
+  background: linear-gradient(180deg, @lavender, @lavender 80%, @mauve);
 }
 flowboxchild:nth-child(3):hover .btn {
-  background: linear-gradient(180deg, @blue, @blue 60%, @sapphire);
+  background: linear-gradient(180deg, @blue, @blue 80%, @sapphire);
 }
 
 flowboxchild:nth-child(4) .btn {
-  background: linear-gradient(205deg, @lavender, @lavender 60%, @mauve);
+  background: linear-gradient(205deg, @lavender, @lavender 80%, @mauve);
 }
 flowboxchild:nth-child(4):hover .btn {
-  background: linear-gradient(205deg, @blue, @blue 60%, @sapphire);
+  background: linear-gradient(205deg, @blue, @blue 80%, @sapphire);
 }
 
 flowboxchild:nth-child(5) .btn {
-  background: linear-gradient(215deg, @lavender, @lavender 60%, @mauve);
+  background: linear-gradient(215deg, @lavender, @lavender 80%, @mauve);
 }
 flowboxchild:nth-child(5):hover .btn {
-  background: linear-gradient(215deg, @blue, @blue 60%, @sapphire);
+  background: linear-gradient(215deg, @blue, @blue 80%, @sapphire);
+}
+
+.user-label {
+  border-radius: 8px;
+  margin: 20px 32px;
+  padding: 0 12px;
+  padding-top: 15px;
+  background: linear-gradient(135deg, @lavender, @lavender 80%, @mauve);
+  color: @mantle;
+  box-shadow: 1px 1px 1px 1px @surface0;
 }

@@ -15,6 +15,8 @@ const HEIGHT: i32 = 390;
 pub struct InitApp {
     pub no_focus: bool,
     pub dryrun: bool,
+    pub user: String,
+    pub host: Option<String>,
 }
 
 #[derive(Debug)]
@@ -29,6 +31,7 @@ pub enum AppMessage {
 }
 
 pub struct AppModel {
+    user: String,
     dead_internet: Controller<DeadInternet>,
     dryrun: bool,
 }
@@ -88,62 +91,74 @@ impl SimpleComponent for AppModel {
                     set_content_fit: gtk::ContentFit::Cover,
                 },
 
-                add_overlay = &gtk::FlowBox {
-                    set_valign: gtk::Align::Start,
-                    set_max_children_per_line: 5,
-                    set_min_children_per_line: 2,
-                    set_selection_mode: gtk::SelectionMode::Single,
-                    set_homogeneous: true,
-                    set_row_spacing: 6,
-                    set_column_spacing: 6,
-                    set_margin_all: 12,
+                add_overlay = &gtk::Box {
+                    set_orientation: gtk4::Orientation::Vertical,
 
-                    gtk::FlowBoxChild {
-                        set_focusable: false,
+                    gtk::FlowBox {
+                        set_max_children_per_line: 5,
+                        set_min_children_per_line: 2,
+                        set_selection_mode: gtk::SelectionMode::Single,
+                        set_homogeneous: true,
+                        set_row_spacing: 6,
+                        set_column_spacing: 6,
+                        set_margin_all: 12,
 
-                        gtk::Button {
-                            add_css_class: "btn",
-                            set_icon_name: icon_names::ROTATION_LOCK,
-                            connect_clicked => AppMessage::Lock,
-                        }
-                    },
-                    gtk::FlowBoxChild {
-                        set_focusable: false,
+                        gtk::FlowBoxChild {
+                            set_focusable: false,
 
-                        gtk::Button {
-                            add_css_class: "btn",
-                            set_icon_name: icon_names::MOON_OUTLINE,
-                            connect_clicked => AppMessage::Sleep,
-                        }
-                    },
-                    gtk::FlowBoxChild {
-                        set_focusable: false,
-
-                        gtk::Button {
-                            add_css_class: "btn",
-                            set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
-                            connect_clicked => AppMessage::Reboot,
+                            gtk::Button {
+                                add_css_class: "btn",
+                                set_icon_name: icon_names::ROTATION_LOCK,
+                                connect_clicked => AppMessage::Lock,
+                            }
                         },
-                    },
-                    gtk::FlowBoxChild {
-                        set_focusable: false,
+                        gtk::FlowBoxChild {
+                            set_focusable: false,
 
-                        gtk::Button {
-                            add_css_class: "btn",
-                            set_icon_name: icon_names::TURN_OFF,
-                            connect_clicked => AppMessage::Shutdown,
+                            gtk::Button {
+                                add_css_class: "btn",
+                                set_icon_name: icon_names::MOON_OUTLINE,
+                                connect_clicked => AppMessage::Sleep,
+                            }
                         },
-                    },
-                    gtk::FlowBoxChild {
-                        set_focusable: false,
+                        gtk::FlowBoxChild {
+                            set_focusable: false,
 
-                        gtk::Button {
-                            add_css_class: "btn",
-                            set_icon_name: icon_names::ARROW_INTO_BOX,
-                            connect_clicked => AppMessage::Logout,
+                            gtk::Button {
+                                add_css_class: "btn",
+                                set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
+                                connect_clicked => AppMessage::Reboot,
+                            },
+                        },
+                        gtk::FlowBoxChild {
+                            set_focusable: false,
+
+                            gtk::Button {
+                                add_css_class: "btn",
+                                set_icon_name: icon_names::TURN_OFF,
+                                connect_clicked => AppMessage::Shutdown,
+                            },
+                        },
+                        gtk::FlowBoxChild {
+                            set_focusable: false,
+
+                            gtk::Button {
+                                add_css_class: "btn",
+                                set_icon_name: icon_names::ARROW_INTO_BOX,
+                                connect_clicked => AppMessage::Logout,
+                            }
                         }
+                    },
+
+                    gtk::Box {
+                        gtk::Label {
+                            add_css_class: "user-label",
+                            set_halign: gtk::Align::Center,
+                            set_valign: gtk::Align::Center,
+                            set_text: &model.user,
+                        },
                     }
-                }
+                },
             }
         }
     }
@@ -154,9 +169,14 @@ impl SimpleComponent for AppModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let dead_internat_video = DeadInternet::builder().launch(()).detach();
+        let user = match init.host {
+            Some(host) => { format!("{}@{host}", init.user) },
+            None => { init.user}
+        };
         let model = AppModel {
             dead_internet: dead_internat_video,
             dryrun: init.dryrun,
+            user: user,
         };
 
         let dead_internet = model.dead_internet.widget();

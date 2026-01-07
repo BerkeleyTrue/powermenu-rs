@@ -56,6 +56,20 @@ struct Cli {
     gtk_options: Vec<String>,
 }
 
+fn get_user() -> String {
+    std::env::var("USER").unwrap_or("Anon".to_string())
+}
+
+fn get_host() -> Option<String> {
+    std::process::Command::new("uname")
+        .arg("-n")
+        .output()
+        .map(|out| out.stdout)
+        .map(|out_bytes| String::from_utf8_lossy(&out_bytes).to_string())
+        .inspect_err(|err| debug!("host err: {err:?}"))
+        .ok()
+}
+
 fn main() {
     let args = Cli::parse();
     let program_invoc = std::env::args().next().unwrap();
@@ -89,8 +103,15 @@ fn main() {
     gtk::init().unwrap();
 
     let app = RelmApp::new("com.bt.powermenu");
+    let user = get_user();
+    let host = get_host();
+
+    debug!("user: {}, host: {:?}", user, host);
+
     app.with_args(gtk_args).run::<AppModel>(InitApp {
         no_focus: args.no_focus,
         dryrun: args.dryrun,
+        user: user,
+        host: host,
     });
 }
