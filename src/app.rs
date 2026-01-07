@@ -26,7 +26,8 @@ impl SimpleComponent for AppModel {
     type Output = ();
     view! {
         gtk::Window {
-            set_title: Some("PowerMenu"),
+            set_title: Some("DeadInternet"),
+            add_css_class: "dead-internet",
             set_default_width: WIDTH,
             set_default_height: HEIGHT,
             set_margin_all: 0,
@@ -45,9 +46,9 @@ impl SimpleComponent for AppModel {
             },
 
             gtk::Overlay {
+                add_css_class: "overlay",
                 #[local_ref]
                 dead_internet -> gtk::Picture {
-                    // set_size_request: (WIDTH, HEIGHT),
                     set_hexpand: true,
                     set_vexpand: true,
                     set_content_fit: gtk::ContentFit::Cover,
@@ -61,32 +62,27 @@ impl SimpleComponent for AppModel {
                     set_homogeneous: true,
                     set_row_spacing: 6,
                     set_column_spacing: 6,
-                    // set_margin_all: 12,
+                    set_margin_all: 12,
 
-                    gtk::Box {
-                        gtk::Button {
-                            set_icon_name: icon_names::ROTATION_LOCK,
-                        }
+                    gtk::Button {
+                        add_css_class: "btn",
+                        set_icon_name: icon_names::ROTATION_LOCK,
                     },
-                    gtk::Box {
-                        gtk::Button {
-                            set_icon_name: icon_names::MOON_OUTLINE,
-                        }
+                    gtk::Button {
+                        add_css_class: "btn",
+                        set_icon_name: icon_names::MOON_OUTLINE,
                     },
-                    gtk::Box {
-                        gtk::Button {
-                            set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
-                        }
+                    gtk::Button {
+                        add_css_class: "btn",
+                        set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
                     },
-                    gtk::Box {
-                        gtk::Button {
-                            set_icon_name: icon_names::TURN_OFF,
-                        }
+                    gtk::Button {
+                        add_css_class: "btn",
+                        set_icon_name: icon_names::TURN_OFF,
                     },
-                    gtk::Box {
-                        gtk::Button {
-                            set_icon_name: icon_names::ARROW_INTO_BOX,
-                        }
+                    gtk::Button {
+                        add_css_class: "btn",
+                        set_icon_name: icon_names::ARROW_INTO_BOX,
                     }
                 }
             }

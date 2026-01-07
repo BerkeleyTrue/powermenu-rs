@@ -13,4 +13,4 @@ run:
 
 [group('build')]
 watch:
-  cargo watch -w src -x run
+  cargo watch -w src -w resources -x run

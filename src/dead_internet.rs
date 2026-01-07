@@ -32,6 +32,7 @@ impl SimpleComponent for DeadInternet {
 
     view! {
         gtk::Picture {
+            add_css_class: "gif",
             set_paintable: Some(&model.media),
         }
     }
