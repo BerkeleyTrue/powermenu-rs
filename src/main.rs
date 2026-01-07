@@ -54,24 +54,33 @@ struct Cli {
 }
 
 fn main() {
+    // initialize tracing
+    tracing_subscriber::fmt::init();
+
     let args = Cli::parse();
     let program_invoc = std::env::args().next().unwrap();
     let mut gtk_args = vec![program_invoc];
 
     debug!("cli args {:?}", &args);
+    if args.no_focus {
+        println!("Powermenu: Running in no focus mode");
+    }
+
+    if args.dryrun {
+        println!("Powermenu: Running in dryrun mode");
+    }
 
     gtk_args.extend(args.gtk_options.clone());
 
-    // initialize tracing
-    tracing_subscriber::fmt::init();
+    // setup gtk
     relm4_icons::initialize_icons(icon_names::GRESOURCE_BYTES, icon_names::RESOURCE_PREFIX);
     dead_internet::init_resources();
     load_css();
-
     gtk::init().unwrap();
 
     let app = RelmApp::new("com.bt.powermenu");
-    app.with_args(gtk_args).run::<AppModel>(InitApp{
-        no_focus: args.no_focus
+    app.with_args(gtk_args).run::<AppModel>(InitApp {
+        no_focus: args.no_focus,
+        dryrun: args.dryrun,
     });
 }

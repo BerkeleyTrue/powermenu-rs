@@ -1,9 +1,11 @@
+use std::process::Command;
+
 use gtk4_layer_shell::{Layer, LayerShell};
 use relm4::{
     gtk::{self, gdk::Key, gio::prelude::ApplicationExt, glib, prelude::*},
     prelude::*,
 };
-use tracing::info;
+use tracing::{debug, info};
 
 use crate::{dead_internet::DeadInternet, icon_names};
 
@@ -12,10 +14,7 @@ const HEIGHT: i32 = 390;
 
 pub struct InitApp {
     pub no_focus: bool,
-}
-
-pub struct AppModel {
-    dead_internet: Controller<DeadInternet>,
+    pub dryrun: bool,
 }
 
 #[derive(Debug)]
@@ -27,6 +26,29 @@ pub enum AppMessage {
     Logout,
 
     QuitApp,
+}
+
+pub struct AppModel {
+    dead_internet: Controller<DeadInternet>,
+    dryrun: bool,
+}
+
+impl AppModel {
+    fn command(&self, program: &str, args: Vec<&str>) {
+        let mut cmd = Command::new(&program);
+        cmd.args(&args);
+
+        if self.dryrun {
+            debug!("{cmd:#?}");
+            let args_print = args.join(" ");
+            println!("dryrun: {program} {args_print}");
+        } else {
+            cmd.output()
+                .map_err(|err| format!("Error running command: {err:?}"))
+                .unwrap();
+        }
+        relm4::main_application().quit();
+    }
 }
 
 #[relm4::component(pub)]
@@ -134,6 +156,7 @@ impl SimpleComponent for AppModel {
         let dead_internat_video = DeadInternet::builder().launch(()).detach();
         let model = AppModel {
             dead_internet: dead_internat_video,
+            dryrun: init.dryrun,
         };
 
         let dead_internet = model.dead_internet.widget();
@@ -163,19 +186,27 @@ impl SimpleComponent for AppModel {
                 relm4::main_application().quit();
             }
             AppMessage::Lock => {
-                info!("Lock Request");
+                debug!("Lock Request");
+                self.command("loginctl", vec!["lock-session"]);
             }
             AppMessage::Sleep => {
                 info!("Sleep Request");
+                self.command("systemctl", vec!["suspend"]);
             }
             AppMessage::Reboot => {
                 info!("Reboot Request");
+                self.command("systemctl", vec!["reboot"]);
             }
             AppMessage::Shutdown => {
                 info!("Shutdown Request");
+                self.command("systemctl", vec!["poweroff"]);
             }
             AppMessage::Logout => {
                 info!("Logout request");
+                self.command(
+                    "systemctl",
+                    vec!["--user", "start", "shutdown-graphical.target"],
+                );
             }
         }
     }
