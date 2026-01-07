@@ -29,6 +29,33 @@
           ];
         };
       in {
+        packages.default = pkgs.rustPlatform.buildRustPackage {
+          pname = manifest.name;
+          version = manifest.version;
+          src = ./.;
+          cargoLock.lockFile = ./Cargo.lock;
+
+          nativeBuildInputs = with pkgs; [
+            pkg-config
+            wrapGAppsHook4
+            gobject-introspection
+          ];
+
+          buildInputs = with pkgs; [
+            gtk4
+            gtk4-layer-shell
+            libadwaita
+            gdk-pixbuf
+            librsvg
+          ];
+
+          meta = with lib; {
+            description = "Powermenu in rust and relm4";
+            license = licenses.mit;
+            mainProgram = manifest.name;
+          };
+        };
+
         formatter.default = pkgs.alejandra;
         devShells.default = pkgs.mkShell {
           name = "${manifest.name}";
