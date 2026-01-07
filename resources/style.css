@@ -54,6 +54,7 @@ flowboxchild:focus-visible {
 .btn {
   border-radius: 8px;
   border: none;
+  color: @mantle;
 }
 
 .btn:focus,
@@ -63,6 +64,7 @@ flowboxchild:focus-visible .btn {
   outline: 2px solid @pink;
   outline-offset: 1px;
   box-shadow: none;
+  color: @crust
 }
 
 flowboxchild:nth-child(1) .btn {
