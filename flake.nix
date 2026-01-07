@@ -73,6 +73,7 @@
           RUST_BACKTRACE = "full";
           RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
           GIO_MODULE_DIR = "${pkgs.glib-networking}/lib/gio/modules";
+          GTK_A11Y = "none";
 
           shellHook = ''
             function menu () {

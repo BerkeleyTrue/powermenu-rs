@@ -10,7 +10,8 @@ use gtk4::{
     CssProvider, STYLE_PROVIDER_PRIORITY_APPLICATION, STYLE_PROVIDER_PRIORITY_USER, gdk::Display,
 };
 use relm4::{RelmApp, gtk};
-use tracing::debug;
+use tracing::{Level, debug};
+use tracing_subscriber::FmtSubscriber;
 
 use crate::app::{AppModel, InitApp};
 
@@ -41,6 +42,8 @@ fn load_css() {
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Cli {
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
     /// don't quite on focus lost
     #[arg(short, long)]
     no_focus: bool,
@@ -54,12 +57,19 @@ struct Cli {
 }
 
 fn main() {
-    // initialize tracing
-    tracing_subscriber::fmt::init();
-
     let args = Cli::parse();
     let program_invoc = std::env::args().next().unwrap();
     let mut gtk_args = vec![program_invoc];
+
+    // initialize tracing
+    let log_level = match args.verbose {
+        0 => Level::ERROR,
+        1 => Level::INFO,
+        2 => Level::DEBUG,
+        _ => Level::TRACE,
+    };
+    let subscriber = FmtSubscriber::builder().with_max_level(log_level).finish();
+    tracing::subscriber::set_global_default(subscriber).expect("Failed to setup tracing");
 
     debug!("cli args {:?}", &args);
     if args.no_focus {

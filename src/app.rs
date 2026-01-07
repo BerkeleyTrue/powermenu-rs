@@ -168,7 +168,7 @@ impl SimpleComponent for AppModel {
 
         let key_controller = gtk::EventControllerKey::new();
         key_controller.connect_key_pressed(move |_, key, _, _| {
-            info!("key pressed {:?}", key);
+            debug!("key pressed {:?}", key);
             if key == Key::q || key == Key::Escape {
                 sender.input(AppMessage::QuitApp);
                 glib::Propagation::Stop
@@ -186,7 +186,7 @@ impl SimpleComponent for AppModel {
                 relm4::main_application().quit();
             }
             AppMessage::Lock => {
-                debug!("Lock Request");
+                info!("Lock Request");
                 self.command("loginctl", vec!["lock-session"]);
             }
             AppMessage::Sleep => {
