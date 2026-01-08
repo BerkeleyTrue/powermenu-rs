@@ -14,3 +14,7 @@ run:
 [group('build')]
 watch:
   cargo watch -w src -w resources -x "run -- --no-focus --dryrun -v"
+
+[group('build')]
+nix:
+  nix build
