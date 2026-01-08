@@ -22,7 +22,5 @@ target
 
 .direnv
 
-
-# Added by cargo
-
-/target
+# nix build
+result
