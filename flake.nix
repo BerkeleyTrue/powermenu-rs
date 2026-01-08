@@ -11,7 +11,49 @@
     flake-parts,
     nixpkgs,
     ...
-  }:
+  }: let
+    mkPackage = pkgs: let
+      manifest = (pkgs.lib.importTOML ./Cargo.toml).package;
+    in
+      pkgs.rustPlatform.buildRustPackage {
+        pname = manifest.name;
+        version = manifest.version;
+        src = ./.;
+        cargoLock.lockFile = ./Cargo.lock;
+
+        # buildtime
+        nativeBuildInputs = with pkgs; [
+          pkg-config
+          wrapGAppsHook4
+          gobject-introspection
+        ];
+
+        # runtime
+        buildInputs = with pkgs; [
+          gtk4
+          gtk4-layer-shell
+          libadwaita
+          gdk-pixbuf
+          # needed for icons
+          librsvg
+          # needed for video streaming
+          gst_all_1.gstreamer
+          gst_all_1.gst-plugins-base
+          gst_all_1.gst-plugins-good
+          gst_all_1.gst-libav
+        ];
+        preFixup = ''
+          gappsWrapperArgs+=(
+            --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${pkgs.lib.makeSearchPath "lib/gstreamer-1.0" (with pkgs.gst_all_1; [gstreamer gst-plugins-base gst-plugins-good gst-libav])}"
+          )
+        '';
+        meta = with pkgs.lib; {
+          description = "Powermenu in rust and relm4";
+          license = licenses.mit;
+          mainProgram = manifest.name;
+        };
+      };
+  in
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [];
       systems = ["x86_64-linux"];
@@ -24,48 +66,10 @@
         manifest = (lib.importTOML ./Cargo.toml).package;
         pkgs = import nixpkgs {
           inherit system;
-
-          overlays = [
-          ];
+          overlays = [];
         };
       in {
-        packages.default = pkgs.rustPlatform.buildRustPackage {
-          pname = manifest.name;
-          version = manifest.version;
-          src = ./.;
-          cargoLock.lockFile = ./Cargo.lock;
-
-          nativeBuildInputs = with pkgs; [
-            pkg-config
-            wrapGAppsHook4
-            gobject-introspection
-          ];
-
-          buildInputs = with pkgs; [
-            gtk4
-            gtk4-layer-shell
-            libadwaita
-            gdk-pixbuf
-            librsvg
-            gst_all_1.gstreamer
-            gst_all_1.gst-plugins-base
-            gst_all_1.gst-plugins-good
-            gst_all_1.gst-libav
-          ];
-
-          preFixup = ''
-            gappsWrapperArgs+=(
-              --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${pkgs.lib.makeSearchPath "lib/gstreamer-1.0" (with pkgs.gst_all_1; [gstreamer gst-plugins-base gst-plugins-good gst-libav])}"
-            )
-          '';
-
-          meta = with lib; {
-            description = "Powermenu in rust and relm4";
-            license = licenses.mit;
-            mainProgram = manifest.name;
-          };
-        };
-
+        packages.default = mkPackage pkgs;
         formatter.default = pkgs.alejandra;
         devShells.default = pkgs.mkShell {
           name = "${manifest.name}";
@@ -128,6 +132,12 @@
           '';
         };
       };
-      flake = {};
+      flake = {
+        overlays.default = final: prev: let
+          manifest = (prev.lib.importTOML ./Cargo.toml).package;
+        in {
+          ${manifest.name} = mkPackage final;
+        };
+      };
     };
 }
