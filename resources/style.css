@@ -1,29 +1,10 @@
-@define-color rosewater #f2d5cf;
-@define-color flamingo #eebebe;
-@define-color pink #f4b8e4;
-@define-color mauve #ca9ee6;
-@define-color red #e78284;
-@define-color maroon #ea999c;
-@define-color peach #ef9f76;
-@define-color yellow #e5c890;
-@define-color green #a6d189;
-@define-color teal #81c8be;
-@define-color sky #99d1db;
-@define-color sapphire #85c1dc;
-@define-color blue #8caaee;
+@define-color purple #A955E8;
+@define-color pink #FF8BBB;
+@define-color light #FFE3DE;
+@define-color dark #170F2B;
+
 @define-color lavender #babbf1;
-@define-color text #c6d0f5;
-@define-color subtext1 #b5bfe2;
-@define-color subtext0 #a5adce;
-@define-color overlay2 #949cbb;
-@define-color overlay1 #838ba7;
-@define-color overlay0 #737994;
-@define-color surface2 #626880;
-@define-color surface1 #51576d;
-@define-color surface0 #414559;
 @define-color base #303446;
-@define-color mantle #292c3c;
-@define-color crust #232634;
 
 window.dead-internet {
   background: transparent;
@@ -34,6 +15,21 @@ window.dead-internet {
   border-radius: 8px;
   border: 3px solid @lavender;
   box-shadow: 3px 3px 8px 8px @base;
+  background: @dark;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gif {
+  border-radius: 8px;
+  animation: fade-in 0.2s ease-in;
 }
 
 flowboxchild {
@@ -48,81 +44,35 @@ flowboxchild:focus-visible {
 }
 
 .btn {
-  border-radius: 8px;
-  border: none;
-  color: @mantle;
-  box-shadow: 1px 1px 2px 2px @surface0;
+  background: linear-gradient(@light, @light 85%, @pink 85%, @pink 93%, @purple 93%);
+  border-radius: 0;
+  border: 2px solid @dark;
+  color: @dark;
+  box-shadow: 1px 1px 2px 2px @white;
 }
 
 .btn:focus,
-.btn:focus-visible,
-flowboxchild:focus .btn,
-flowboxchild:focus-visible .btn {
-  outline: 2px solid @pink;
-  outline-offset: 1px;
+.btn:focus-visible {
+  background: linear-gradient(shade(@light, 0.96), shade(@light, 0.95) 85%, @pink 85%, @pink 93%, @purple 93%);
   box-shadow: none;
-  color: @crust;
+  outline: none;
 }
 
-flowboxchild:nth-child(1) .btn {
-  background: linear-gradient(145deg, @lavender, @lavender 80%, @mauve);
-}
-flowboxchild:nth-child(1):hover .btn {
-  background: linear-gradient(145deg, @blue , @blue 80%, @sapphire);
-}
-
-flowboxchild:nth-child(2) .btn {
-  background: linear-gradient(157deg, @lavender, @lavender 80%, @mauve);
-}
-flowboxchild:nth-child(2):hover .btn {
-  background: linear-gradient(157deg, @blue, @blue 80%, @sapphire);
+.btn:hover {
+  background: linear-gradient(shade(@light, 0.94), shade(@light, 0.93) 85%, @pink 85%, @pink 93%, @purple 93%);
+  box-shadow: none;
+  outline: none;
 }
 
-flowboxchild:nth-child(3) .btn {
-  background: linear-gradient(180deg, @lavender, @lavender 80%, @mauve);
-}
-flowboxchild:nth-child(3):hover .btn {
-  background: linear-gradient(180deg, @blue, @blue 80%, @sapphire);
-}
-
-flowboxchild:nth-child(4) .btn {
-  background: linear-gradient(205deg, @lavender, @lavender 80%, @mauve);
-}
-flowboxchild:nth-child(4):hover .btn {
-  background: linear-gradient(205deg, @blue, @blue 80%, @sapphire);
-}
-
-flowboxchild:nth-child(5) .btn {
-  background: linear-gradient(215deg, @lavender, @lavender 80%, @mauve);
-}
-flowboxchild:nth-child(5):hover .btn {
-  background: linear-gradient(215deg, @blue, @blue 80%, @sapphire);
+flowboxchild {
+  border: 2px solid @light;
+  padding: 0;
 }
 
 .user-label {
-  border-radius: 8px;
+  background: linear-gradient(@light, @light 85%, @pink 85%, @pink 93%, @purple 93%);
+  box-shadow: inset 0 0 0 2px @dark, 0 0 0 2px @light;
+  color: @dark;
   margin: 20px 32px;
   padding: 12px 12px;
-  background: linear-gradient(135deg, @lavender, @lavender 80%, @mauve);
-  color: @mantle;
-  box-shadow: 1px 1px 1px 1px @surface0;
-}
-
-.overlay {
-  background: #170F2B;
-}
-
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.gif {
-  border-radius: 8px;
-  animation: fade-in 0.2s ease-in;
 }
