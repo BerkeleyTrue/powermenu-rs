@@ -106,8 +106,7 @@ flowboxchild:nth-child(5):hover .btn {
 .user-label {
   border-radius: 8px;
   margin: 20px 32px;
-  padding: 0 12px;
-  padding-top: 15px;
+  padding: 12px 12px;
   background: linear-gradient(135deg, @lavender, @lavender 80%, @mauve);
   color: @mantle;
   box-shadow: 1px 1px 1px 1px @surface0;
