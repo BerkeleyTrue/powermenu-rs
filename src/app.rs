@@ -31,8 +31,6 @@ pub enum AppMessage {
 }
 
 pub struct AppModel {
-    user: String,
-    dead_internet: Controller<DeadInternet>,
     dryrun: bool,
 }
 
@@ -59,6 +57,78 @@ impl SimpleComponent for AppModel {
     type Init = InitApp;
     type Input = AppMessage;
     type Output = ();
+
+    fn init(
+        init: Self::Init,
+        root: Self::Root,
+        sender: ComponentSender<Self>,
+    ) -> ComponentParts<Self> {
+        let dead_internet_video = DeadInternet::builder().launch(()).detach();
+        let dead_internet = dead_internet_video.widget();
+
+        let user = match init.host {
+            Some(host) => {
+                format!("{}@{host}", init.user)
+            }
+            None => init.user,
+        };
+
+        let model = AppModel {
+            dryrun: init.dryrun,
+        };
+
+        let widgets = view_output!();
+
+        root.init_layer_shell();
+        root.set_layer(Layer::Overlay);
+        root.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::OnDemand);
+
+        let key_controller = gtk::EventControllerKey::new();
+        key_controller.connect_key_pressed(move |_, key, _, _| {
+            debug!("key pressed {:?}", key);
+            if key == Key::q || key == Key::Escape {
+                sender.input(AppMessage::QuitApp);
+                glib::Propagation::Stop
+            } else {
+                glib::Propagation::Proceed
+            }
+        });
+
+        root.add_controller(key_controller);
+        ComponentParts { model, widgets }
+    }
+
+    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+        match message {
+            AppMessage::QuitApp => {
+                relm4::main_application().quit();
+            }
+            AppMessage::Lock => {
+                info!("Lock Request");
+                self.command("loginctl", vec!["lock-session"]);
+            }
+            AppMessage::Sleep => {
+                info!("Sleep Request");
+                self.command("systemctl", vec!["suspend"]);
+            }
+            AppMessage::Reboot => {
+                info!("Reboot Request");
+                self.command("systemctl", vec!["reboot"]);
+            }
+            AppMessage::Shutdown => {
+                info!("Shutdown Request");
+                self.command("systemctl", vec!["poweroff"]);
+            }
+            AppMessage::Logout => {
+                info!("Logout request");
+                self.command(
+                    "systemctl",
+                    vec!["--user", "start", "shutdown-graphical.target"],
+                );
+            }
+        }
+    }
+
     view! {
         gtk::Window {
             set_title: Some("DeadInternet"),
@@ -84,6 +154,7 @@ impl SimpleComponent for AppModel {
 
             gtk::Overlay {
                 add_css_class: "overlay",
+
                 #[local_ref]
                 dead_internet -> gtk::Picture {
                     set_hexpand: true,
@@ -155,78 +226,10 @@ impl SimpleComponent for AppModel {
                             add_css_class: "user-label",
                             set_halign: gtk::Align::Center,
                             set_valign: gtk::Align::Center,
-                            set_text: &model.user,
+                            set_text: &user,
                         },
                     }
                 },
-            }
-        }
-    }
-
-    fn init(
-        init: Self::Init,
-        root: Self::Root,
-        sender: ComponentSender<Self>,
-    ) -> ComponentParts<Self> {
-        let dead_internat_video = DeadInternet::builder().launch(()).detach();
-        let user = match init.host {
-            Some(host) => { format!("{}@{host}", init.user) },
-            None => { init.user}
-        };
-        let model = AppModel {
-            dead_internet: dead_internat_video,
-            dryrun: init.dryrun,
-            user: user,
-        };
-
-        let dead_internet = model.dead_internet.widget();
-        let widgets = view_output!();
-
-        root.init_layer_shell();
-        root.set_layer(Layer::Overlay);
-        root.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::OnDemand);
-
-        let key_controller = gtk::EventControllerKey::new();
-        key_controller.connect_key_pressed(move |_, key, _, _| {
-            debug!("key pressed {:?}", key);
-            if key == Key::q || key == Key::Escape {
-                sender.input(AppMessage::QuitApp);
-                glib::Propagation::Stop
-            } else {
-                glib::Propagation::Proceed
-            }
-        });
-        root.add_controller(key_controller);
-        ComponentParts { model, widgets }
-    }
-
-    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
-        match message {
-            AppMessage::QuitApp => {
-                relm4::main_application().quit();
-            }
-            AppMessage::Lock => {
-                info!("Lock Request");
-                self.command("loginctl", vec!["lock-session"]);
-            }
-            AppMessage::Sleep => {
-                info!("Sleep Request");
-                self.command("systemctl", vec!["suspend"]);
-            }
-            AppMessage::Reboot => {
-                info!("Reboot Request");
-                self.command("systemctl", vec!["reboot"]);
-            }
-            AppMessage::Shutdown => {
-                info!("Shutdown Request");
-                self.command("systemctl", vec!["poweroff"]);
-            }
-            AppMessage::Logout => {
-                info!("Logout request");
-                self.command(
-                    "systemctl",
-                    vec!["--user", "start", "shutdown-graphical.target"],
-                );
             }
         }
     }

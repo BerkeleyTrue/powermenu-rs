@@ -30,13 +30,6 @@ impl SimpleComponent for DeadInternet {
     type Input = ();
     type Output = ();
 
-    view! {
-        gtk::Picture {
-            add_css_class: "gif",
-            set_paintable: Some(&model.media),
-        }
-    }
-
     fn init(
         _init: Self::Init,
         _root: Self::Root,
@@ -62,4 +55,12 @@ impl SimpleComponent for DeadInternet {
         let widgets = view_output!();
         ComponentParts { model, widgets }
     }
+
+    view! {
+        gtk::Picture {
+            add_css_class: "gif",
+            set_paintable: Some(&model.media),
+        }
+    }
+
 }
