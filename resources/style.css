@@ -36,10 +36,6 @@ window.dead-internet {
   box-shadow: 3px 3px 8px 8px @base;
 }
 
-.gif {
-  border-radius: 8px;
-}
-
 flowboxchild {
   background: transparent;
 }
@@ -110,4 +106,23 @@ flowboxchild:nth-child(5):hover .btn {
   background: linear-gradient(135deg, @lavender, @lavender 80%, @mauve);
   color: @mantle;
   box-shadow: 1px 1px 1px 1px @surface0;
+}
+
+.overlay {
+  background: #170F2B;
+}
+
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gif {
+  border-radius: 8px;
+  animation: fade-in 0.2s ease-in;
 }
