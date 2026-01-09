@@ -2,6 +2,7 @@
 <gresources>
   <gresource prefix="/com/bt/powermenu-rs">
     <file compressed="false">redlotoo_dead-internet.mp4</file>
+    <file>redlotoo_dead-internet.png</file>
     <file>style.css</file>
   </gresource>
 </gresources>

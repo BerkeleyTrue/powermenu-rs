@@ -1,3 +1,4 @@
+use gtk4::gdk::{Paintable, Texture};
 use relm4::{
     gtk::{self, gio, glib, prelude::*},
     prelude::*,
@@ -21,23 +22,14 @@ pub fn init_resources() {
 }
 
 pub struct DeadInternet {
-    media: gtk::MediaFile,
+    poster: Texture,
+    media: Option<gtk::MediaFile>,
 }
 
-#[relm4::component(pub)]
-impl SimpleComponent for DeadInternet {
-    type Init = ();
-    type Input = ();
-    type Output = ();
-
-    fn init(
-        _init: Self::Init,
-        _root: Self::Root,
-        _sender: relm4::ComponentSender<Self>,
-    ) -> relm4::ComponentParts<Self> {
+impl DeadInternet {
+    fn load_media(&mut self) {
         let file = gio::File::for_uri(&format!(
-            "resource://{}/redlotoo_dead-internet.mp4",
-            RESOURCE_PREFIX
+            "resource://{RESOURCE_PREFIX}/redlotoo_dead-internet.mp4"
         ));
 
         let media = gtk::MediaFile::for_file(&file);
@@ -50,17 +42,57 @@ impl SimpleComponent for DeadInternet {
         });
         media.set_loop(true);
         media.play();
+        self.media = Some(media);
+    }
+}
 
-        let model = DeadInternet { media };
+#[derive(Debug)]
+pub enum Messages {
+    LoadVideo,
+}
+
+#[relm4::component(pub)]
+impl SimpleComponent for DeadInternet {
+    type Init = ();
+    type Input = Messages;
+    type Output = ();
+
+    fn init(
+        _init: Self::Init,
+        root: Self::Root,
+        sender: relm4::ComponentSender<Self>,
+    ) -> relm4::ComponentParts<Self> {
+        let poster =
+            Texture::from_resource(&format!("{RESOURCE_PREFIX}/redlotoo_dead-internet.png"));
+        let model = DeadInternet {
+            poster,
+            media: None,
+        };
+
         let widgets = view_output!();
+
+        root.connect_realize(move |_| {
+            sender.input(Messages::LoadVideo);
+        });
+
         ComponentParts { model, widgets }
+    }
+
+    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+        match message {
+            Messages::LoadVideo => {
+                self.load_media();
+            }
+        }
     }
 
     view! {
         gtk::Picture {
             add_css_class: "gif",
-            set_paintable: Some(&model.media),
+            #[watch]
+            set_paintable: model.media.as_ref()
+                .map(|m| m.upcast_ref::<Paintable>())
+                .or(Some(model.poster.upcast_ref::<Paintable>())),
         }
     }
-
 }
