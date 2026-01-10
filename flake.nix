@@ -45,6 +45,7 @@
         preFixup = ''
           gappsWrapperArgs+=(
             --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${pkgs.lib.makeSearchPath "lib/gstreamer-1.0" (with pkgs.gst_all_1; [gstreamer gst-plugins-base gst-plugins-good gst-libav])}"
+            --set GTK_A11Y none
           )
         '';
         meta = with pkgs.lib; {
