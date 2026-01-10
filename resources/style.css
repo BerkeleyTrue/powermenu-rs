@@ -3,7 +3,6 @@
 @define-color light #FFE3DE;
 @define-color dark #170F2B;
 
-@define-color lavender #babbf1;
 @define-color base #303446;
 
 window.dead-internet {
@@ -12,8 +11,8 @@ window.dead-internet {
 }
 
 .overlay {
-  border-radius: 8px;
-  border: 3px solid @lavender;
+  border-radius: 1px;
+  border: 3px solid @light;
   box-shadow: 3px 3px 8px 8px @base;
   background: @dark;
 }
@@ -28,7 +27,7 @@ window.dead-internet {
 }
 
 .gif {
-  border-radius: 8px;
+  border-radius: 1px;
   animation: fade-in 0.2s ease-in;
 }
 
