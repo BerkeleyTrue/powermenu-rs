@@ -1,18 +1,17 @@
 use std::process::Command;
 
-use gtk4_layer_shell::{Layer, LayerShell};
-use relm4::{
-    gtk::{self, gdk::Key, gio::prelude::ApplicationExt, glib, prelude::*},
-    prelude::*,
+use iced::{
+    Element, Size,
+    widget::{self, column},
 };
 use tracing::{debug, info};
 
-use crate::{dead_internet::DeadInternet, icon_names};
+pub const SIZE: Size = Size {
+    width: 623.0,
+    height: 390.0,
+};
 
-const WIDTH: i32 = 623;
-const HEIGHT: i32 = 390;
-
-pub struct InitApp {
+pub struct Init {
     pub no_focus: bool,
     pub dryrun: bool,
     pub user: String,
@@ -20,7 +19,7 @@ pub struct InitApp {
 }
 
 #[derive(Debug)]
-pub enum AppMessage {
+pub enum Message {
     Lock,
     Sleep,
     Shutdown,
@@ -35,6 +34,7 @@ pub struct AppModel {
 }
 
 impl AppModel {
+    // TODO: convert into iced commands
     fn command(&self, program: &str, args: Vec<&str>) {
         let mut cmd = Command::new(&program);
         cmd.args(&args);
@@ -48,78 +48,60 @@ impl AppModel {
                 .map_err(|err| format!("Error running command: {err:?}"))
                 .unwrap();
         }
-        relm4::main_application().quit();
-    }
-}
-
-#[relm4::component(pub)]
-impl SimpleComponent for AppModel {
-    type Init = InitApp;
-    type Input = AppMessage;
-    type Output = ();
-
-    fn init(
-        init: Self::Init,
-        root: Self::Root,
-        sender: ComponentSender<Self>,
-    ) -> ComponentParts<Self> {
-        let dead_internet_video = DeadInternet::builder().launch(()).detach();
-        let dead_internet = dead_internet_video.widget();
-
-        let user = match init.host {
-            Some(host) => {
-                format!("{}@{host}", init.user)
-            }
-            None => init.user,
-        };
-
-        let model = AppModel {
-            dryrun: init.dryrun,
-        };
-
-        let widgets = view_output!();
-
-        root.init_layer_shell();
-        root.set_layer(Layer::Overlay);
-        root.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::OnDemand);
-
-        let key_controller = gtk::EventControllerKey::new();
-        key_controller.connect_key_pressed(move |_, key, _, _| {
-            debug!("key pressed {:?}", key);
-            if key == Key::q || key == Key::Escape {
-                sender.input(AppMessage::QuitApp);
-                glib::Propagation::Stop
-            } else {
-                glib::Propagation::Proceed
-            }
-        });
-
-        root.add_controller(key_controller);
-        ComponentParts { model, widgets }
+        // TODO: move to iced
+        // relm4::main_application().quit();
     }
 
-    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+    pub fn new() -> Self {
+        // TODO: convert dead internet
+        // TODO: load user/host as a command
+        // let dead_internet_video = DeadInternet::builder().launch(()).detach();
+        // let dead_internet = dead_internet_video.widget();
+
+        // let user = match init.host {
+        //     Some(host) => {
+        //         format!("{}@{host}", init.user)
+        //     }
+        //     None => init.user,
+        // };
+
+        AppModel { dryrun: false }
+
+        // TODO: use iced subscriptions and keyboard crate
+        // let key_controller = gtk::EventControllerKey::new();
+        // key_controller.connect_key_pressed(move |_, key, _, _| {
+        //     debug!("key pressed {:?}", key);
+        //     if key == Key::q || key == Key::Escape {
+        //         sender.input(Message::QuitApp);
+        //         glib::Propagation::Stop
+        //     } else {
+        //         glib::Propagation::Proceed
+        //     }
+        // });
+    }
+
+    pub fn update(&mut self, message: Message) {
         match message {
-            AppMessage::QuitApp => {
-                relm4::main_application().quit();
+            Message::QuitApp => {
+                // TODO: quit app
             }
-            AppMessage::Lock => {
+            Message::Lock => {
                 info!("Lock Request");
                 self.command("loginctl", vec!["lock-session"]);
             }
-            AppMessage::Sleep => {
+            Message::Sleep => {
                 info!("Sleep Request");
                 self.command("systemctl", vec!["suspend"]);
             }
-            AppMessage::Reboot => {
+            Message::Reboot => {
                 info!("Reboot Request");
                 self.command("systemctl", vec!["reboot"]);
             }
-            AppMessage::Shutdown => {
+            Message::Shutdown => {
                 info!("Shutdown Request");
                 self.command("systemctl", vec!["poweroff"]);
             }
-            AppMessage::Logout => {
+            Message::Logout => {
                 info!("Logout request");
                 self.command(
                     "systemctl",
@@ -129,108 +111,110 @@ impl SimpleComponent for AppModel {
         }
     }
 
-    view! {
-        gtk::Window {
-            set_title: Some("DeadInternet"),
-            add_css_class: "dead-internet",
-            set_default_width: WIDTH,
-            set_default_height: HEIGHT,
-            set_margin_all: 0,
-
-            connect_close_request[sender] => move |_| {
-                info!("close request");
-                sender.input(AppMessage::QuitApp);
-                gtk::glib::Propagation::Stop
-            },
-
-            connect_is_active_notify[sender, no_focus = init.no_focus] => move |window| {
-                if !window.is_active() {
-                    info!("lost focus");
-                    if !no_focus {
-                        sender.input(AppMessage::QuitApp);
-                    }
-                }
-            },
-
-            gtk::Overlay {
-                add_css_class: "overlay",
-
-                #[local_ref]
-                dead_internet -> gtk::Picture {
-                    set_hexpand: true,
-                    set_vexpand: true,
-                    set_content_fit: gtk::ContentFit::Cover,
-                },
-
-                add_overlay = &gtk::Box {
-                    set_orientation: gtk4::Orientation::Vertical,
-
-                    gtk::FlowBox {
-                        set_max_children_per_line: 5,
-                        set_min_children_per_line: 2,
-                        set_selection_mode: gtk::SelectionMode::Single,
-                        set_homogeneous: true,
-                        set_row_spacing: 6,
-                        set_column_spacing: 6,
-                        set_margin_all: 12,
-
-                        gtk::FlowBoxChild {
-                            set_focusable: false,
-
-                            gtk::Button {
-                                add_css_class: "btn",
-                                set_icon_name: icon_names::ROTATION_LOCK,
-                                connect_clicked => AppMessage::Lock,
-                            }
-                        },
-                        gtk::FlowBoxChild {
-                            set_focusable: false,
-
-                            gtk::Button {
-                                add_css_class: "btn",
-                                set_icon_name: icon_names::MOON_OUTLINE,
-                                connect_clicked => AppMessage::Sleep,
-                            }
-                        },
-                        gtk::FlowBoxChild {
-                            set_focusable: false,
-
-                            gtk::Button {
-                                add_css_class: "btn",
-                                set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
-                                connect_clicked => AppMessage::Reboot,
-                            },
-                        },
-                        gtk::FlowBoxChild {
-                            set_focusable: false,
-
-                            gtk::Button {
-                                add_css_class: "btn",
-                                set_icon_name: icon_names::TURN_OFF,
-                                connect_clicked => AppMessage::Shutdown,
-                            },
-                        },
-                        gtk::FlowBoxChild {
-                            set_focusable: false,
-
-                            gtk::Button {
-                                add_css_class: "btn",
-                                set_icon_name: icon_names::ARROW_INTO_BOX,
-                                connect_clicked => AppMessage::Logout,
-                            }
-                        }
-                    },
-
-                    gtk::Box {
-                        gtk::Label {
-                            add_css_class: "user-label",
-                            set_halign: gtk::Align::Center,
-                            set_valign: gtk::Align::Center,
-                            set_text: &user,
-                        },
-                    }
-                },
-            }
-        }
+    pub fn view(&self) -> Element<'_, Message> {
+        column![widget::text("Hello World").size(18)]
+            .spacing(10)
+            .into()
+        // gtk::Window {
+        //     set_title: Some("DeadInternet"),
+        //     add_css_class: "dead-internet",
+        //     set_default_width: WIDTH,
+        //     set_default_height: HEIGHT,
+        //     set_margin_all: 0,
+        //
+        //     connect_close_request[sender] => move |_| {
+        //         info!("close request");
+        //         sender.input(AppMessage::QuitApp);
+        //         gtk::glib::Propagation::Stop
+        //     },
+        //
+        //     connect_is_active_notify[sender, no_focus = init.no_focus] => move |window| {
+        //         if !window.is_active() {
+        //             info!("lost focus");
+        //             if !no_focus {
+        //                 sender.input(AppMessage::QuitApp);
+        //             }
+        //         }
+        //     },
+        //
+        //     gtk::Overlay {
+        //         add_css_class: "overlay",
+        //
+        //         #[local_ref]
+        //         dead_internet -> gtk::Picture {
+        //             set_hexpand: true,
+        //             set_vexpand: true,
+        //             set_content_fit: gtk::ContentFit::Cover,
+        //         },
+        //
+        //         add_overlay = &gtk::Box {
+        //             set_orientation: gtk4::Orientation::Vertical,
+        //
+        //             gtk::FlowBox {
+        //                 set_max_children_per_line: 5,
+        //                 set_min_children_per_line: 2,
+        //                 set_selection_mode: gtk::SelectionMode::Single,
+        //                 set_homogeneous: true,
+        //                 set_row_spacing: 6,
+        //                 set_column_spacing: 6,
+        //                 set_margin_all: 12,
+        //
+        //                 gtk::FlowBoxChild {
+        //                     set_focusable: false,
+        //
+        //                     gtk::Button {
+        //                         add_css_class: "btn",
+        //                         set_icon_name: icon_names::ROTATION_LOCK,
+        //                         connect_clicked => AppMessage::Lock,
+        //                     }
+        //                 },
+        //                 gtk::FlowBoxChild {
+        //                     set_focusable: false,
+        //
+        //                     gtk::Button {
+        //                         add_css_class: "btn",
+        //                         set_icon_name: icon_names::MOON_OUTLINE,
+        //                         connect_clicked => AppMessage::Sleep,
+        //                     }
+        //                 },
+        //                 gtk::FlowBoxChild {
+        //                     set_focusable: false,
+        //
+        //                     gtk::Button {
+        //                         add_css_class: "btn",
+        //                         set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
+        //                         connect_clicked => AppMessage::Reboot,
+        //                     },
+        //                 },
+        //                 gtk::FlowBoxChild {
+        //                     set_focusable: false,
+        //
+        //                     gtk::Button {
+        //                         add_css_class: "btn",
+        //                         set_icon_name: icon_names::TURN_OFF,
+        //                         connect_clicked => AppMessage::Shutdown,
+        //                     },
+        //                 },
+        //                 gtk::FlowBoxChild {
+        //                     set_focusable: false,
+        //
+        //                     gtk::Button {
+        //                         add_css_class: "btn",
+        //                         set_icon_name: icon_names::ARROW_INTO_BOX,
+        //                         connect_clicked => AppMessage::Logout,
+        //                     }
+        //                 }
+        //             },
+        //
+        //             gtk::Box {
+        //                 gtk::Label {
+        //                     add_css_class: "user-label",
+        //                     set_halign: gtk::Align::Center,
+        //                     set_valign: gtk::Align::Center,
+        //                     set_text: &user,
+        //                 },
+        //             }
+        //         },
+        //     }
     }
 }
