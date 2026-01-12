@@ -1,5 +1,5 @@
 use iced::{
-    Element, Size, Subscription, Task, exit,
+    Element, Event, Size, Subscription, Task, event, exit,
     keyboard::{self, Key, key::Named},
     widget::{self, column},
 };
@@ -44,6 +44,7 @@ pub enum Message {
 pub struct AppModel {
     dryrun: bool,
     user: Option<String>,
+    no_focus: bool,
 }
 
 async fn get_user() -> Message {
@@ -66,6 +67,21 @@ async fn get_user() -> Message {
 }
 
 impl AppModel {
+    pub fn new(init: Init) -> (Self, Task<Message>) {
+        // TODO: convert dead internet
+        // let dead_internet_video = DeadInternet::builder().launch(()).detach();
+        // let dead_internet = dead_internet_video.widget();
+
+        (
+            AppModel {
+                dryrun: init.dryrun,
+                no_focus: init.no_focus,
+                user: None,
+            },
+            Task::future(get_user()),
+        )
+    }
+
     fn command(&self, program: &str, args: Vec<&str>) -> Task<Message> {
         let mut cmd = std::process::Command::new(&program);
         cmd.args(&args);
@@ -80,20 +96,6 @@ impl AppModel {
                 .unwrap();
         }
         exit()
-    }
-
-    pub fn new(init: Init) -> (Self, Task<Message>) {
-        // TODO: convert dead internet
-        // let dead_internet_video = DeadInternet::builder().launch(()).detach();
-        // let dead_internet = dead_internet_video.widget();
-
-        (
-            AppModel {
-                dryrun: init.dryrun,
-                user: None,
-            },
-            Task::future(get_user()),
-        )
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -130,7 +132,8 @@ impl AppModel {
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
-        keyboard::listen()
+        let no_focus = self.no_focus.clone();
+        let key_events = keyboard::listen()
             .filter_map(|event| match event {
                 keyboard::Event::KeyPressed { key, .. } => Some(key),
                 _ => None,
@@ -138,7 +141,16 @@ impl AppModel {
             .filter_map(|key| match key.as_ref() {
                 Key::Named(Named::Escape) | Key::Character("q") => Some(Message::QuitApp),
                 _ => None,
-            })
+            });
+
+        let app_events = event::listen_with(move |event, _, _| match event {
+            Event::Window(iced::window::Event::Unfocused) => Some(Message::QuitApp),
+            _ => None,
+        })
+        .with(no_focus)
+        .filter_map(move |(no_focus, e)| if no_focus { None } else { Some(e) });
+
+        Subscription::batch(vec![key_events, app_events])
     }
 
     pub fn view(&self) -> Element<'_, Message> {
