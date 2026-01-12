@@ -1,8 +1,7 @@
 use std::process::Command;
 
 use iced::{
-    Element, Size,
-    widget::{self, column},
+    Element, Size, Subscription, Task, exit, keyboard::{self, Key, key::Named}, widget::{self, column}, window
 };
 use tracing::{debug, info};
 
@@ -35,7 +34,7 @@ pub struct AppModel {
 
 impl AppModel {
     // TODO: convert into iced commands
-    fn command(&self, program: &str, args: Vec<&str>) {
+    fn command(&self, program: &str, args: Vec<&str>) -> Task<Message> {
         let mut cmd = Command::new(&program);
         cmd.args(&args);
 
@@ -48,6 +47,7 @@ impl AppModel {
                 .map_err(|err| format!("Error running command: {err:?}"))
                 .unwrap();
         }
+        Task::none()
         // TODO: move to iced
         // relm4::main_application().quit();
     }
@@ -66,49 +66,47 @@ impl AppModel {
         // };
 
         AppModel { dryrun: false }
-
-        // TODO: use iced subscriptions and keyboard crate
-        // let key_controller = gtk::EventControllerKey::new();
-        // key_controller.connect_key_pressed(move |_, key, _, _| {
-        //     debug!("key pressed {:?}", key);
-        //     if key == Key::q || key == Key::Escape {
-        //         sender.input(Message::QuitApp);
-        //         glib::Propagation::Stop
-        //     } else {
-        //         glib::Propagation::Proceed
-        //     }
-        // });
     }
 
-    pub fn update(&mut self, message: Message) {
+    pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::QuitApp => {
-                // TODO: quit app
-            }
+            Message::QuitApp => exit(),
             Message::Lock => {
                 info!("Lock Request");
-                self.command("loginctl", vec!["lock-session"]);
+                self.command("loginctl", vec!["lock-session"])
             }
             Message::Sleep => {
                 info!("Sleep Request");
-                self.command("systemctl", vec!["suspend"]);
+                self.command("systemctl", vec!["suspend"])
             }
             Message::Reboot => {
                 info!("Reboot Request");
-                self.command("systemctl", vec!["reboot"]);
+                self.command("systemctl", vec!["reboot"])
             }
             Message::Shutdown => {
                 info!("Shutdown Request");
-                self.command("systemctl", vec!["poweroff"]);
+                self.command("systemctl", vec!["poweroff"])
             }
             Message::Logout => {
                 info!("Logout request");
                 self.command(
                     "systemctl",
                     vec!["--user", "start", "shutdown-graphical.target"],
-                );
+                )
             }
         }
+    }
+
+    pub fn subscription(&self) -> Subscription<Message> {
+        keyboard::listen()
+            .filter_map(|event| match event {
+                keyboard::Event::KeyPressed { key, .. } => Some(key),
+                _ => None,
+            })
+            .filter_map(|key| match key.as_ref() {
+                Key::Named(Named::Escape) | Key::Character("q") => Some(Message::QuitApp),
+                _ => None,
+            })
     }
 
     pub fn view(&self) -> Element<'_, Message> {

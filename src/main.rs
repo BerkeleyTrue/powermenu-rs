@@ -5,7 +5,7 @@ use clap::Parser;
 use tracing::{Level, debug};
 use tracing_subscriber::FmtSubscriber;
 
-use crate::app::{ AppModel, SIZE};
+use crate::app::{AppModel, SIZE};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -61,8 +61,9 @@ fn main() -> iced::Result {
     //
     // debug!("user: {}, host: {:?}", user, host);
 
-
     iced::application(AppModel::new, AppModel::update, AppModel::view)
+        .subscription(AppModel::subscription)
         .window_size(SIZE)
+        .title("Powermenu")
         .run()
 }
