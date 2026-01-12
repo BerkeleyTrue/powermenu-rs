@@ -1,11 +1,9 @@
-use std::process::Command;
-
 use iced::{
     Element, Size, Subscription, Task, exit,
     keyboard::{self, Key, key::Named},
     widget::{self, column},
 };
-use tokio::fs;
+use tokio::{fs, process::Command};
 use tracing::{debug, info};
 
 pub const SIZE: Size = Size {
@@ -37,9 +35,17 @@ pub struct AppModel {
 }
 
 async fn get_user() -> Message {
-    let user = std::env::var("USER").unwrap_or("Anon".to_string());
-    let host = fs::read_to_string("/proc/sys/kernel/hostname").await
-        .map(|s| s.trim().to_string())
+    let user = Command::new("whoami")
+        .output()
+        .await
+        .map(|out| String::from_utf8_lossy(&out.stdout).trim().to_string())
+        .unwrap_or("Anon".to_string());
+
+    let host = Command::new("uname")
+        .arg("-n")
+        .output()
+        .await
+        .map(|out| String::from_utf8_lossy(&out.stdout).trim().to_string())
         .ok();
 
     debug!("user: {}, host: {:?}", user, host);
@@ -49,7 +55,7 @@ async fn get_user() -> Message {
 
 impl AppModel {
     fn command(&self, program: &str, args: Vec<&str>) -> Task<Message> {
-        let mut cmd = Command::new(&program);
+        let mut cmd = std::process::Command::new(&program);
         cmd.args(&args);
 
         if self.dryrun {
