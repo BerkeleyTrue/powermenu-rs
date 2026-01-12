@@ -21,15 +21,6 @@ struct Cli {
     dryrun: bool,
 }
 
-fn get_user() -> String {
-    std::env::var("USER").unwrap_or("Anon".to_string())
-}
-
-fn get_host() -> Option<String> {
-    std::fs::read_to_string("/proc/sys/kernel/hostname")
-        .map(|s| s.trim().to_string())
-        .ok()
-}
 
 fn main() -> iced::Result {
     let args = Cli::parse();
@@ -53,13 +44,6 @@ fn main() -> iced::Result {
     if args.dryrun {
         println!("Powermenu: Running in dryrun mode");
     }
-
-    // setup gtk
-
-    // let user = get_user();
-    // let host = get_host();
-    //
-    // debug!("user: {}, host: {:?}", user, host);
 
     iced::application(AppModel::new, AppModel::update, AppModel::view)
         .subscription(AppModel::subscription)

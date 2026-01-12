@@ -1,7 +1,9 @@
 use std::process::Command;
 
 use iced::{
-    Element, Size, Subscription, Task, exit, keyboard::{self, Key, key::Named}, widget::{self, column}, window
+    Element, Size, Subscription, Task, exit,
+    keyboard::{self, Key, key::Named},
+    widget::{self, column},
 };
 use tracing::{debug, info};
 
@@ -19,6 +21,7 @@ pub struct Init {
 
 #[derive(Debug)]
 pub enum Message {
+    User(String, Option<String>),
     Lock,
     Sleep,
     Shutdown,
@@ -28,12 +31,32 @@ pub enum Message {
     QuitApp,
 }
 
+#[derive(Default)]
 pub struct AppModel {
     dryrun: bool,
+    user: Option<String>,
+}
+
+fn get_user() -> String {
+    std::env::var("USER").unwrap_or("Anon".to_string())
+}
+
+fn get_host() -> Option<String> {
+    std::fs::read_to_string("/proc/sys/kernel/hostname")
+        .map(|s| s.trim().to_string())
+        .ok()
+}
+
+async fn get_user_str() -> Message {
+    let user = get_user();
+    let host = get_host();
+
+    debug!("user: {}, host: {:?}", user, host);
+
+    Message::User(user, host)
 }
 
 impl AppModel {
-    // TODO: convert into iced commands
     fn command(&self, program: &str, args: Vec<&str>) -> Task<Message> {
         let mut cmd = Command::new(&program);
         cmd.args(&args);
@@ -47,25 +70,15 @@ impl AppModel {
                 .map_err(|err| format!("Error running command: {err:?}"))
                 .unwrap();
         }
-        Task::none()
-        // TODO: move to iced
-        // relm4::main_application().quit();
+        exit()
     }
 
-    pub fn new() -> Self {
+    pub fn new() -> (Self, Task<Message>) {
         // TODO: convert dead internet
-        // TODO: load user/host as a command
         // let dead_internet_video = DeadInternet::builder().launch(()).detach();
         // let dead_internet = dead_internet_video.widget();
 
-        // let user = match init.host {
-        //     Some(host) => {
-        //         format!("{}@{host}", init.user)
-        //     }
-        //     None => init.user,
-        // };
-
-        AppModel { dryrun: false }
+        (AppModel::default(), Task::future(get_user_str()))
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -94,6 +107,10 @@ impl AppModel {
                     vec!["--user", "start", "shutdown-graphical.target"],
                 )
             }
+            Message::User(user, host) => {
+                self.user = host.map(|host| format!("{user}@{host}")).or(Some(user));
+                Task::none()
+            }
         }
     }
 
@@ -110,9 +127,17 @@ impl AppModel {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        column![widget::text("Hello World").size(18)]
-            .spacing(10)
-            .into()
+        column![
+            widget::text(
+                self.user
+                    .as_ref()
+                    .map(|u| format!("Hello {u}"))
+                    .unwrap_or("Hello World".to_string())
+            )
+            .size(18)
+        ]
+        .spacing(10)
+        .into()
         // gtk::Window {
         //     set_title: Some("DeadInternet"),
         //     add_css_class: "dead-internet",
