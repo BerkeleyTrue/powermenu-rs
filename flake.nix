@@ -12,8 +12,14 @@
     nixpkgs,
     ...
   }: let
+    winitRuntimeLibs = pkgs:
+      with pkgs; [
+        wayland
+        libxkbcommon
+      ];
     mkPackage = pkgs: let
       manifest = (pkgs.lib.importTOML ./Cargo.toml).package;
+      runtimeLibs = winitRuntimeLibs pkgs;
     in
       pkgs.rustPlatform.buildRustPackage {
         pname = manifest.name;
@@ -29,22 +35,25 @@
         ];
 
         # runtime
-        buildInputs = with pkgs; [
-          gtk4
-          gtk4-layer-shell
-          libadwaita
-          gdk-pixbuf
-          # needed for icons
-          librsvg
-          # needed for video streaming
-          gst_all_1.gstreamer
-          gst_all_1.gst-plugins-base
-          gst_all_1.gst-plugins-good
-          gst_all_1.gst-libav
-        ];
+        buildInputs =
+          (with pkgs; [
+            gtk4
+            gtk4-layer-shell
+            libadwaita
+            gdk-pixbuf
+            # needed for icons
+            librsvg
+            # needed for video streaming
+            gst_all_1.gstreamer
+            gst_all_1.gst-plugins-base
+            gst_all_1.gst-plugins-good
+            gst_all_1.gst-libav
+          ])
+          ++ runtimeLibs;
         preFixup = ''
           gappsWrapperArgs+=(
             --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${pkgs.lib.makeSearchPath "lib/gstreamer-1.0" (with pkgs.gst_all_1; [gstreamer gst-plugins-base gst-plugins-good gst-libav])}"
+            --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath runtimeLibs}"
             --set GTK_A11Y none
           )
         '';
@@ -69,45 +78,35 @@
           inherit system;
           overlays = [];
         };
+        runtimeLibs = winitRuntimeLibs pkgs;
       in {
         packages.default = mkPackage pkgs;
         formatter.default = pkgs.alejandra;
         devShells.default = pkgs.mkShell {
           name = "${manifest.name}";
 
-          nativeBuildInputs = with pkgs; [
-            cargo
-            cargo-generate
-            cargo-watch
-            clippy
-            rustc
-            rustfmt
+          nativeBuildInputs =
+            (with pkgs; [
+              cargo
+              cargo-generate
+              cargo-watch
+              clippy
+              rustc
+              rustfmt
 
-            openssl
+              openssl
+            ])
+            ++ runtimeLibs;
 
-            gtk4
-            gtk4-layer-shell
-            meson
-            ninja
-            parted
-            gettext
-            appstream
-            pkg-config
-            gdk-pixbuf
-            libadwaita
-            librsvg
-            gnome-desktop
-            wrapGAppsHook4
-            desktop-file-utils
-            gobject-introspection
-            rustPlatform.bindgenHook
-            gst_all_1.gstreamer
-            gst_all_1.gst-plugins-base
-            gst_all_1.gst-plugins-good
-            gst_all_1.gst-libav
-          ];
-
-          LD_LIBRARY_PATH = lib.makeLibraryPath (with pkgs; [gcc libiconv llvmPackages.llvm]);
+          LD_LIBRARY_PATH =
+            lib.makeLibraryPath (
+              (with pkgs; [
+                gcc
+                libiconv
+                llvmPackages.llvm
+              ])
+              ++ runtimeLibs
+            );
           LIBCLANG_PATH = lib.makeLibraryPath [pkgs.libclang];
           NIX_LDFLAGS = "-L${pkgs.libiconv}/lib";
 
