@@ -15,8 +15,6 @@ pub const SIZE: Size = Size {
 pub struct Init {
     pub no_focus: bool,
     pub dryrun: bool,
-    pub user: String,
-    pub host: Option<String>,
 }
 
 #[derive(Debug)]
@@ -37,19 +35,11 @@ pub struct AppModel {
     user: Option<String>,
 }
 
-fn get_user() -> String {
-    std::env::var("USER").unwrap_or("Anon".to_string())
-}
-
-fn get_host() -> Option<String> {
-    std::fs::read_to_string("/proc/sys/kernel/hostname")
+async fn get_user() -> Message {
+    let user = std::env::var("USER").unwrap_or("Anon".to_string());
+    let host = std::fs::read_to_string("/proc/sys/kernel/hostname")
         .map(|s| s.trim().to_string())
-        .ok()
-}
-
-async fn get_user_str() -> Message {
-    let user = get_user();
-    let host = get_host();
+        .ok();
 
     debug!("user: {}, host: {:?}", user, host);
 
@@ -73,12 +63,18 @@ impl AppModel {
         exit()
     }
 
-    pub fn new() -> (Self, Task<Message>) {
+    pub fn new(init: Init) -> (Self, Task<Message>) {
         // TODO: convert dead internet
         // let dead_internet_video = DeadInternet::builder().launch(()).detach();
         // let dead_internet = dead_internet_video.widget();
 
-        (AppModel::default(), Task::future(get_user_str()))
+        (
+            AppModel {
+                dryrun: init.dryrun,
+                user: None,
+            },
+            Task::future(get_user()),
+        )
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {

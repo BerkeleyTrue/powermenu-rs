@@ -21,10 +21,8 @@ struct Cli {
     dryrun: bool,
 }
 
-
 fn main() -> iced::Result {
     let args = Cli::parse();
-    let program_invoc = std::env::args().next().unwrap();
 
     // initialize tracing
     let log_level = match args.verbose {
@@ -45,9 +43,18 @@ fn main() -> iced::Result {
         println!("Powermenu: Running in dryrun mode");
     }
 
-    iced::application(AppModel::new, AppModel::update, AppModel::view)
-        .subscription(AppModel::subscription)
-        .window_size(SIZE)
-        .title("Powermenu")
-        .run()
+    iced::application(
+        move || {
+            AppModel::new(app::Init {
+                dryrun: args.dryrun,
+                no_focus: args.no_focus,
+            })
+        },
+        AppModel::update,
+        AppModel::view,
+    )
+    .subscription(AppModel::subscription)
+    .window_size(SIZE)
+    .title("Powermenu")
+    .run()
 }
