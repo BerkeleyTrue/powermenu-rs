@@ -43,13 +43,9 @@ fn main() -> iced::Result {
         println!("Powermenu: Running in dryrun mode");
     }
 
+    let model_init = app::Init::from(args);
     iced::application(
-        move || {
-            AppModel::new(app::Init {
-                dryrun: args.dryrun,
-                no_focus: args.no_focus,
-            })
-        },
+        move || AppModel::new(model_init.clone()),
         AppModel::update,
         AppModel::view,
     )

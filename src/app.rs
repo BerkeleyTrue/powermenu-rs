@@ -3,17 +3,29 @@ use iced::{
     keyboard::{self, Key, key::Named},
     widget::{self, column},
 };
-use tokio::{fs, process::Command};
+use tokio::process::Command;
 use tracing::{debug, info};
+
+use crate::Cli;
 
 pub const SIZE: Size = Size {
     width: 623.0,
     height: 390.0,
 };
 
+#[derive(Clone)]
 pub struct Init {
     pub no_focus: bool,
     pub dryrun: bool,
+}
+
+impl From<Cli> for Init {
+    fn from(value: Cli) -> Self {
+        Self {
+            dryrun: value.dryrun,
+            no_focus: value.no_focus,
+        }
+    }
 }
 
 #[derive(Debug)]
