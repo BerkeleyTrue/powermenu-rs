@@ -1,5 +1,5 @@
 use iced::{
-    Element, Event, Size, Subscription, Task, event, exit,
+    Element, Event, Subscription, Task, event, exit,
     keyboard::{self, Key, key::Named},
     widget::{self, column},
 };
@@ -8,10 +8,7 @@ use tracing::{debug, info};
 
 use crate::Cli;
 
-pub const SIZE: Size = Size {
-    width: 623.0,
-    height: 390.0,
-};
+pub const SIZE: (u32, u32) = (623, 390);
 
 #[derive(Clone)]
 pub struct Init {
@@ -28,7 +25,7 @@ impl From<Cli> for Init {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Message {
     User(String, Option<String>),
     Lock,
@@ -41,7 +38,7 @@ pub enum Message {
 }
 
 #[derive(Default)]
-pub struct AppModel {
+pub struct App {
     dryrun: bool,
     user: Option<String>,
     no_focus: bool,
@@ -66,14 +63,14 @@ async fn get_user() -> Message {
     Message::User(user, host)
 }
 
-impl AppModel {
+impl App {
     pub fn new(init: Init) -> (Self, Task<Message>) {
         // TODO: convert dead internet
         // let dead_internet_video = DeadInternet::builder().launch(()).detach();
         // let dead_internet = dead_internet_video.widget();
 
         (
-            AppModel {
+            App {
                 dryrun: init.dryrun,
                 no_focus: init.no_focus,
                 user: None,

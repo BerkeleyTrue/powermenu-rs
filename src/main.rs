@@ -2,10 +2,16 @@ mod app;
 // mod dead_internet;
 
 use clap::Parser;
+use iced::{Element, Subscription, Task};
+use iced_layershell::{
+    reexport::{Anchor, KeyboardInteractivity},
+    settings::LayerShellSettings,
+    to_layer_message,
+};
 use tracing::{Level, debug};
 use tracing_subscriber::FmtSubscriber;
 
-use crate::app::{AppModel, SIZE};
+use crate::app::SIZE;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -21,7 +27,39 @@ struct Cli {
     dryrun: bool,
 }
 
-fn main() -> iced::Result {
+#[to_layer_message]
+#[derive(Debug)]
+enum Message {
+    App(app::Message),
+}
+
+struct LayerApp {
+    app: app::App,
+}
+
+impl LayerApp {
+    fn new(init: app::Init) -> (Self, Task<Message>) {
+        let (app, task) = app::App::new(init);
+        (Self { app }, task.map(Message::App))
+    }
+
+    fn update(&mut self, message: Message) -> Task<Message> {
+        match message {
+            Message::App(message) => self.app.update(message).map(Message::App),
+            _ => Task::none(),
+        }
+    }
+
+    fn view(&self) -> Element<'_, Message> {
+        self.app.view().map(Message::App)
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        self.app.subscription().map(Message::App)
+    }
+}
+
+fn main() -> iced_layershell::Result {
     let args = Cli::parse();
 
     // initialize tracing
@@ -44,13 +82,22 @@ fn main() -> iced::Result {
     }
 
     let model_init = app::Init::from(args);
-    iced::application(
-        move || AppModel::new(model_init.clone()),
-        AppModel::update,
-        AppModel::view,
+
+    iced_layershell::application(
+        move || LayerApp::new(model_init.clone()),
+        || "Powermenu".to_string(),
+        LayerApp::update,
+        LayerApp::view,
     )
-    .subscription(AppModel::subscription)
-    .window_size(SIZE)
-    .title("Powermenu")
+    .settings(iced_layershell::Settings {
+        layer_settings: LayerShellSettings {
+            size: Some(SIZE),
+            anchor: Anchor::empty(),
+            keyboard_interactivity: KeyboardInteractivity::OnDemand,
+            ..Default::default()
+        },
+        ..Default::default()
+    })
+    .subscription(LayerApp::subscription)
     .run()
 }
