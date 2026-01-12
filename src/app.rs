@@ -5,6 +5,7 @@ use iced::{
     keyboard::{self, Key, key::Named},
     widget::{self, column},
 };
+use tokio::fs;
 use tracing::{debug, info};
 
 pub const SIZE: Size = Size {
@@ -37,7 +38,7 @@ pub struct AppModel {
 
 async fn get_user() -> Message {
     let user = std::env::var("USER").unwrap_or("Anon".to_string());
-    let host = std::fs::read_to_string("/proc/sys/kernel/hostname")
+    let host = fs::read_to_string("/proc/sys/kernel/hostname").await
         .map(|s| s.trim().to_string())
         .ok();
 
