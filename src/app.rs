@@ -1,9 +1,5 @@
 use iced::{
-    Border, Color, Element, Event,
-    Length::{self, Fill},
-    Shadow, Subscription, Task, Theme, Vector, event, exit,
-    keyboard::{self, Key, key::Named},
-    widget::{column, container, row},
+    Border, Color, Element, Event, Length::{self, Fill}, Shadow, Subscription, Task, Theme, Vector, event, exit, keyboard::{self, Key, key::Named}, padding, widget::{container, row}
 };
 use tokio::process::Command;
 use tracing::{debug, info};
@@ -177,7 +173,9 @@ impl App {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let content = row(self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>()).width(Fill);
+        let content = row(self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>())
+            .padding(padding::top(10))
+            .width(Fill);
 
         container(content)
             .width(Length::Fill)
@@ -186,10 +184,10 @@ impl App {
                 let palette = theme.palette();
 
                 container::Style {
-                    background: Some(iced::Background::Color(palette.text)),
+                    background: Some(iced::Background::Color(palette.background)),
                     border: Border::default()
                         .color(palette.primary)
-                        .rounded(1.0)
+                        .rounded(2.0)
                         .width(3.0),
                     shadow: Shadow {
                         blur_radius: 8.0,
