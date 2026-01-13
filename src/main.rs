@@ -2,7 +2,13 @@ mod app;
 // mod dead_internet;
 
 use clap::Parser;
-use iced::{Element, Subscription, Task};
+use iced::{
+    Color, Element,
+    Length::Fill,
+    Subscription, Task, Theme, color,
+    theme::{self, Style},
+    widget::container,
+};
 use iced_layershell::{
     reexport::{Anchor, KeyboardInteractivity},
     settings::LayerShellSettings,
@@ -11,7 +17,7 @@ use iced_layershell::{
 use tracing::{Level, debug};
 use tracing_subscriber::FmtSubscriber;
 
-use crate::app::SIZE;
+use crate::app::{REM, SIZE};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -51,7 +57,12 @@ impl LayerApp {
     }
 
     fn view(&self) -> Element<'_, Message> {
-        self.app.view().map(Message::App)
+        container(self.app.view().map(Message::App))
+            .style(container::transparent)
+            .height(Fill)
+            .width(Fill)
+            .padding(REM)
+            .into()
     }
 
     fn subscription(&self) -> Subscription<Message> {
@@ -89,14 +100,26 @@ fn main() -> iced_layershell::Result {
         LayerApp::update,
         LayerApp::view,
     )
-    .settings(iced_layershell::Settings {
-        layer_settings: LayerShellSettings {
-            size: Some(SIZE),
-            anchor: Anchor::empty(),
-            keyboard_interactivity: KeyboardInteractivity::OnDemand,
-            ..Default::default()
-        },
+    .layer_settings(LayerShellSettings {
+        size: Some(SIZE).map(|(w, h)| (w + REM as u32, h + REM as u32)),
+        anchor: Anchor::empty(),
+        keyboard_interactivity: KeyboardInteractivity::OnDemand,
         ..Default::default()
+    })
+    .theme(Theme::custom(
+        "dead_internet",
+        theme::Palette {
+            background: color!(0x170f2b),
+            text: color!(0xffe3de),
+            primary: color!(0xff8bbb),
+            success: color!(0xa955e8),
+            warning: Color::default(),
+            danger: Color::default(),
+        },
+    ))
+    .style(|_layer, theme| Style {
+        background_color: Color::TRANSPARENT,
+        text_color: theme.palette().text,
     })
     .subscription(LayerApp::subscription)
     .run()

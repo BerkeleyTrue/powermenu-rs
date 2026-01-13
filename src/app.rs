@@ -1,7 +1,7 @@
 use iced::{
-    Element, Event, Subscription, Task, event, exit,
+    Border, Color, Element, Event, Length, Shadow, Subscription, Task, Theme, Vector, event, exit,
     keyboard::{self, Key, key::Named},
-    widget::{self, column},
+    widget::{self, column, container},
 };
 use tokio::process::Command;
 use tracing::{debug, info};
@@ -9,6 +9,7 @@ use tracing::{debug, info};
 use crate::Cli;
 
 pub const SIZE: (u32, u32) = (623, 390);
+pub const REM: f32 = 14.0;
 
 #[derive(Clone)]
 pub struct Init {
@@ -151,7 +152,7 @@ impl App {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        column![
+        let content = column![
             widget::text(
                 self.user
                     .as_ref()
@@ -160,8 +161,29 @@ impl App {
             )
             .size(18)
         ]
-        .spacing(10)
-        .into()
+        .spacing(10);
+        container(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .style(|theme: &Theme| {
+                let palette = theme.palette();
+
+                container::Style {
+                    background: Some(iced::Background::Color(palette.text)),
+                    border: Border::default()
+                        .color(palette.primary)
+                        .rounded(1.0)
+                        .width(3.0),
+                    shadow: Shadow {
+                        blur_radius: 8.0,
+                        color: Color::from_rgba(0.0, 0.0, 0.0, 0.75),
+                        offset: Vector::new(3.0, 3.0),
+                    },
+                    ..Default::default()
+                }
+            })
+            .padding(8)
+            .into()
         // gtk::Window {
         //     set_title: Some("DeadInternet"),
         //     add_css_class: "dead-internet",
