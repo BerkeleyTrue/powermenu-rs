@@ -1,5 +1,11 @@
 use iced::{
-    Border, Color, Element, Event, Length::{self, Fill}, Shadow, Subscription, Task, Theme, Vector, event, exit, keyboard::{self, Key, key::Named}, padding, widget::{container, row}
+    Border, Color, Element, Event,
+    Length::{self, Fill},
+    Padding, Radians, Shadow, Subscription, Task, Theme, Vector, event, exit,
+    gradient::Linear,
+    keyboard::{self, Key, key::Named},
+    padding,
+    widget::{column, container, row, space, text},
 };
 use tokio::process::Command;
 use tracing::{debug, info};
@@ -173,10 +179,59 @@ impl App {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let content = row(self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>())
+        let buttons = row(self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>())
             .padding(padding::top(10))
             .width(Fill);
 
+        let user_container = self
+            .user
+            .as_ref()
+            .map(|user| {
+                let inner_box = container(text(user.clone()))
+                    .padding(10)
+                    .style(|theme: &Theme| {
+                        let palette = theme.palette();
+
+                        container::Style {
+                            background: Some(
+                                Linear::new(Radians::PI)
+                                    .add_stop(0.0, palette.text)
+                                    .add_stop(0.80, palette.text)
+                                    .add_stop(0.81, palette.primary)
+                                    .add_stop(0.87, palette.primary)
+                                    .add_stop(0.88, palette.success)
+                                    .into(),
+                            ),
+                            border: Border::default()
+                                .rounded(1.0)
+                                .color(palette.background)
+                                .width(2.0),
+                            ..Default::default()
+                        }
+                    });
+                let outer_box = container(inner_box)
+                    .style(|theme: &Theme| {
+                        let palette = theme.palette();
+
+                        container::Style {
+                            border: Border::default()
+                                .rounded(1.0)
+                                .color(palette.text)
+                                .width(2.0),
+                            ..Default::default()
+                        }
+                    })
+                    .padding(1);
+                container(outer_box).width(Fill)
+            })
+            .unwrap_or_else(|| container(space()).width(Fill));
+
+        let content = column![
+            buttons,
+            row![user_container].padding(Padding::from([15, 55]))
+        ];
+
+        // main layout
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
@@ -186,9 +241,9 @@ impl App {
                 container::Style {
                     background: Some(iced::Background::Color(palette.background)),
                     border: Border::default()
-                        .color(palette.primary)
+                        .color(palette.text)
                         .rounded(2.0)
-                        .width(3.0),
+                        .width(2.0),
                     shadow: Shadow {
                         blur_radius: 8.0,
                         color: Color::from_rgba(0.0, 0.0, 0.0, 0.75),
@@ -199,88 +254,5 @@ impl App {
             })
             .padding(8)
             .into()
-        // gtk::Window {
-        //     set_margin_all: 0,
-        //
-        //
-        //     gtk::Overlay {
-        //         add_css_class: "overlay",
-        //
-        //         #[local_ref]
-        //         dead_internet -> gtk::Picture {
-        //             set_hexpand: true,
-        //             set_vexpand: true,
-        //             set_content_fit: gtk::ContentFit::Cover,
-        //         },
-        //
-        //         add_overlay = &gtk::Box {
-        //             set_orientation: gtk4::Orientation::Vertical,
-        //
-        //             gtk::FlowBox {
-        //                 set_max_children_per_line: 5,
-        //                 set_min_children_per_line: 2,
-        //                 set_selection_mode: gtk::SelectionMode::Single,
-        //                 set_homogeneous: true,
-        //                 set_row_spacing: 6,
-        //                 set_column_spacing: 6,
-        //                 set_margin_all: 12,
-        //
-        //                 gtk::FlowBoxChild {
-        //                     set_focusable: false,
-        //
-        //                     gtk::Button {
-        //                         add_css_class: "btn",
-        //                         set_icon_name: icon_names::ROTATION_LOCK,
-        //                         connect_clicked => AppMessage::Lock,
-        //                     }
-        //                 },
-        //                 gtk::FlowBoxChild {
-        //                     set_focusable: false,
-        //
-        //                     gtk::Button {
-        //                         add_css_class: "btn",
-        //                         set_icon_name: icon_names::MOON_OUTLINE,
-        //                         connect_clicked => AppMessage::Sleep,
-        //                     }
-        //                 },
-        //                 gtk::FlowBoxChild {
-        //                     set_focusable: false,
-        //
-        //                     gtk::Button {
-        //                         add_css_class: "btn",
-        //                         set_icon_name: icon_names::ARROW_CIRCULAR_SMALL_BOTTOM_RIGHT,
-        //                         connect_clicked => AppMessage::Reboot,
-        //                     },
-        //                 },
-        //                 gtk::FlowBoxChild {
-        //                     set_focusable: false,
-        //
-        //                     gtk::Button {
-        //                         add_css_class: "btn",
-        //                         set_icon_name: icon_names::TURN_OFF,
-        //                         connect_clicked => AppMessage::Shutdown,
-        //                     },
-        //                 },
-        //                 gtk::FlowBoxChild {
-        //                     set_focusable: false,
-        //
-        //                     gtk::Button {
-        //                         add_css_class: "btn",
-        //                         set_icon_name: icon_names::ARROW_INTO_BOX,
-        //                         connect_clicked => AppMessage::Logout,
-        //                     }
-        //                 }
-        //             },
-        //
-        //             gtk::Box {
-        //                 gtk::Label {
-        //                     add_css_class: "user-label",
-        //                     set_halign: gtk::Align::Center,
-        //                     set_valign: gtk::Align::Center,
-        //                     set_text: &user,
-        //                 },
-        //             }
-        //         },
-        //     }
     }
 }
