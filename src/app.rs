@@ -10,7 +10,10 @@ use iced::{
 use tokio::process::Command;
 use tracing::{debug, info};
 
-use crate::{Cli, button::PowerButton};
+use crate::{
+    Cli,
+    button::{Icon, PowerButton},
+};
 
 pub const SIZE: (u32, u32) = (623, 390);
 pub const REM: f32 = 14.0;
@@ -82,23 +85,23 @@ impl App {
                 user: None,
                 buttons: vec![
                     PowerButton {
-                        icon: "lock".to_string(),
+                        icon: Icon::Lock,
                         message: Message::Lock,
                     },
                     PowerButton {
-                        icon: "sleep".to_string(),
+                        icon: Icon::Sleep,
                         message: Message::Sleep,
                     },
                     PowerButton {
-                        icon: "Reboot".to_string(),
+                        icon: Icon::Reboot,
                         message: Message::Reboot,
                     },
                     PowerButton {
-                        icon: "Shutdown".to_string(),
+                        icon: Icon::Shutdown,
                         message: Message::Shutdown,
                     },
                     PowerButton {
-                        icon: "logout".to_string(),
+                        icon: Icon::Logout,
                         message: Message::Logout,
                     },
                 ],
