@@ -1,7 +1,9 @@
 use iced::{
-    Border, Color, Element, Event, Length, Shadow, Subscription, Task, Theme, Vector, event, exit,
+    Border, Color, Element, Event,
+    Length::{self, Fill},
+    Shadow, Subscription, Task, Theme, Vector, event, exit,
     keyboard::{self, Key, key::Named},
-    widget::{self, column, container},
+    widget::{column, container, row},
 };
 use tokio::process::Command;
 use tracing::{debug, info};
@@ -76,10 +78,28 @@ impl App {
                 dryrun: init.dryrun,
                 no_focus: init.no_focus,
                 user: None,
-                buttons: vec![ PowerButton {
-                    icon: "lock".to_string(),
-                    message: Message::Lock,
-                }],
+                buttons: vec![
+                    PowerButton {
+                        icon: "lock".to_string(),
+                        message: Message::Lock,
+                    },
+                    PowerButton {
+                        icon: "sleep".to_string(),
+                        message: Message::Sleep,
+                    },
+                    PowerButton {
+                        icon: "Reboot".to_string(),
+                        message: Message::Reboot,
+                    },
+                    PowerButton {
+                        icon: "Shutdown".to_string(),
+                        message: Message::Shutdown,
+                    },
+                    PowerButton {
+                        icon: "logout".to_string(),
+                        message: Message::Logout,
+                    },
+                ],
             },
             Task::future(get_user()),
         )
@@ -157,10 +177,7 @@ impl App {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let content = column(
-            self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>()
-        )
-        .spacing(10);
+        let content = row(self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>()).width(Fill);
 
         container(content)
             .width(Length::Fill)

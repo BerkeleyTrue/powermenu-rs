@@ -1,6 +1,7 @@
 use iced::{
     Element,
-    widget::{button, text},
+    Length::Fill,
+    widget::{button, container, text},
 };
 
 pub struct PowerButton<T> {
@@ -10,8 +11,8 @@ pub struct PowerButton<T> {
 
 impl<T: Clone + 'static> PowerButton<T> {
     pub fn view(&self) -> Element<'static, T> {
-        button(text(self.icon.clone()))
-            .on_press(self.message.clone())
+        container(button(text(self.icon.clone())).on_press(self.message.clone()))
+            .center_x(Fill)
             .into()
     }
 }
