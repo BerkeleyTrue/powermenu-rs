@@ -1,4 +1,5 @@
 mod app;
+mod button;
 // mod dead_internet;
 
 use clap::Parser;

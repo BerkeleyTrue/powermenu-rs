@@ -6,7 +6,7 @@ use iced::{
 use tokio::process::Command;
 use tracing::{debug, info};
 
-use crate::Cli;
+use crate::{Cli, button::PowerButton};
 
 pub const SIZE: (u32, u32) = (623, 390);
 pub const REM: f32 = 14.0;
@@ -43,6 +43,7 @@ pub struct App {
     dryrun: bool,
     user: Option<String>,
     no_focus: bool,
+    buttons: Vec<PowerButton<Message>>,
 }
 
 async fn get_user() -> Message {
@@ -75,6 +76,10 @@ impl App {
                 dryrun: init.dryrun,
                 no_focus: init.no_focus,
                 user: None,
+                buttons: vec![ PowerButton {
+                    icon: "lock".to_string(),
+                    message: Message::Lock,
+                }],
             },
             Task::future(get_user()),
         )
@@ -152,16 +157,11 @@ impl App {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let content = column![
-            widget::text(
-                self.user
-                    .as_ref()
-                    .map(|u| format!("Hello {u}"))
-                    .unwrap_or("Hello World".to_string())
-            )
-            .size(18)
-        ]
+        let content = column(
+            self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>()
+        )
         .spacing(10);
+
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
@@ -185,26 +185,8 @@ impl App {
             .padding(8)
             .into()
         // gtk::Window {
-        //     set_title: Some("DeadInternet"),
-        //     add_css_class: "dead-internet",
-        //     set_default_width: WIDTH,
-        //     set_default_height: HEIGHT,
         //     set_margin_all: 0,
         //
-        //     connect_close_request[sender] => move |_| {
-        //         info!("close request");
-        //         sender.input(AppMessage::QuitApp);
-        //         gtk::glib::Propagation::Stop
-        //     },
-        //
-        //     connect_is_active_notify[sender, no_focus = init.no_focus] => move |window| {
-        //         if !window.is_active() {
-        //             info!("lost focus");
-        //             if !no_focus {
-        //                 sender.input(AppMessage::QuitApp);
-        //             }
-        //         }
-        //     },
         //
         //     gtk::Overlay {
         //         add_css_class: "overlay",
