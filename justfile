@@ -1,3 +1,6 @@
+
+nixgl := env_var('NIXGL')
+
 default:
   just --list
 
@@ -9,11 +12,19 @@ build:
 
 [group('build')]
 run:
-  cargo run
+  if [ -n "{{nixgl}}" ]; then \
+    {{nixgl}} cargo run; \
+  else \
+    cargo run; \
+  fi
 
 [group('build')]
 watch:
-  cargo watch -w src -w resources -x "run -- --no-focus --dryrun -v"
+  if [ -n "{{nixgl}}" ]; then \
+    {{nixgl}} cargo watch -w src -w resources -x "run -- --no-focus --dryrun -v"; \
+  else \
+    cargo watch -w src -w resources -x "run -- --no-focus --dryrun -v"; \
+  fi
 
 [group('build')]
 nix:

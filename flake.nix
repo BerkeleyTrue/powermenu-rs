@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixgl.url = "github:nix-community/nixGL";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
@@ -10,12 +11,17 @@
   outputs = inputs @ {
     flake-parts,
     nixpkgs,
+    nixgl,
     ...
   }: let
     winitRuntimeLibs = pkgs:
       with pkgs; [
         wayland
         libxkbcommon
+
+        vulkan-loader
+        vulkan-headers
+        libGL
       ];
     mkPackage = pkgs: let
       manifest = (pkgs.lib.importTOML ./Cargo.toml).package;
@@ -30,32 +36,13 @@
         # buildtime
         nativeBuildInputs = with pkgs; [
           pkg-config
-          wrapGAppsHook4
-          gobject-introspection
+          makeWrapper
         ];
 
         # runtime
-        buildInputs =
-          (with pkgs; [
-            gtk4
-            gtk4-layer-shell
-            libadwaita
-            gdk-pixbuf
-            # needed for icons
-            librsvg
-            # needed for video streaming
-            gst_all_1.gstreamer
-            gst_all_1.gst-plugins-base
-            gst_all_1.gst-plugins-good
-            gst_all_1.gst-libav
-          ])
-          ++ runtimeLibs;
+        buildInputs = runtimeLibs;
         preFixup = ''
-          gappsWrapperArgs+=(
-            --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${pkgs.lib.makeSearchPath "lib/gstreamer-1.0" (with pkgs.gst_all_1; [gstreamer gst-plugins-base gst-plugins-good gst-libav])}"
-            --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath runtimeLibs}"
-            --set GTK_A11Y none
-          )
+          --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath runtimeLibs}"
         '';
         meta = with pkgs.lib; {
           description = "Powermenu in rust and relm4";
@@ -76,7 +63,9 @@
         manifest = (lib.importTOML ./Cargo.toml).package;
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [];
+          overlays = [
+            nixgl.overlay
+          ];
         };
         runtimeLibs = winitRuntimeLibs pkgs;
       in {
@@ -96,25 +85,24 @@
 
               openssl
             ])
+            ++ [pkgs.nixgl.nixGLMesa]
             ++ runtimeLibs;
 
-          LD_LIBRARY_PATH =
-            lib.makeLibraryPath (
-              (with pkgs; [
-                gcc
-                libiconv
-                llvmPackages.llvm
-              ])
-              ++ runtimeLibs
-            );
+          WINIT_UNIX_BACKEND = "wayland";
+          LD_LIBRARY_PATH = lib.makeLibraryPath (
+            (with pkgs; [
+              gcc
+              libiconv
+              llvmPackages.llvm
+            ])
+            ++ runtimeLibs
+          );
           LIBCLANG_PATH = lib.makeLibraryPath [pkgs.libclang];
           NIX_LDFLAGS = "-L${pkgs.libiconv}/lib";
+          NIXGL = "${pkgs.nixgl.nixGLMesa}/bin/nixGLMesa";
 
-          # Set Environment Variables
           RUST_BACKTRACE = "full";
           RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
-          GIO_MODULE_DIR = "${pkgs.glib-networking}/lib/gio/modules";
-          GTK_A11Y = "none";
 
           shellHook = ''
             function menu () {
@@ -126,7 +114,6 @@
               echo
             }
 
-            export GIO_MODULE_DIR="${pkgs.glib-networking}/lib/gio/modules"
             menu
             just --list
           '';
