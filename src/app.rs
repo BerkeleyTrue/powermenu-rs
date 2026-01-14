@@ -5,7 +5,7 @@ use iced::{
     gradient::Linear,
     keyboard::{self, Key, key::Named},
     padding,
-    widget::{column, container, row, space, text},
+    widget::{column, container, row, space, stack, text},
 };
 use tokio::process::Command;
 use tracing::{debug, info};
@@ -13,6 +13,7 @@ use tracing::{debug, info};
 use crate::{
     Cli,
     button::{Icon, PowerButton},
+    dead_internet,
 };
 
 pub const SIZE: (u32, u32) = (623, 390);
@@ -36,6 +37,7 @@ impl From<Cli> for Init {
 #[derive(Debug, Clone)]
 pub enum Message {
     User(String, Option<String>),
+    DeadInternet(dead_internet::Message),
     Lock,
     Sleep,
     Shutdown,
@@ -45,8 +47,8 @@ pub enum Message {
     QuitApp,
 }
 
-#[derive(Default)]
 pub struct App {
+    dead_internet: dead_internet::DeadInternet,
     dryrun: bool,
     user: Option<String>,
     no_focus: bool,
@@ -74,12 +76,9 @@ async fn get_user() -> Message {
 
 impl App {
     pub fn new(init: Init) -> (Self, Task<Message>) {
-        // TODO: convert dead internet
-        // let dead_internet_video = DeadInternet::builder().launch(()).detach();
-        // let dead_internet = dead_internet_video.widget();
-
         (
             App {
+                dead_internet: dead_internet::DeadInternet::new(),
                 dryrun: init.dryrun,
                 no_focus: init.no_focus,
                 user: None,
@@ -156,6 +155,10 @@ impl App {
                 self.user = host.map(|host| format!("{user}@{host}")).or(Some(user));
                 Task::none()
             }
+            Message::DeadInternet(message) => self
+                .dead_internet
+                .update(message)
+                .map(Message::DeadInternet),
         }
     }
 
@@ -178,10 +181,16 @@ impl App {
         .with(no_focus)
         .filter_map(move |(no_focus, e)| if no_focus { None } else { Some(e) });
 
-        Subscription::batch(vec![key_events, app_events])
+        let dead_internet_subs = self
+            .dead_internet
+            .subscriptions()
+            .map(Message::DeadInternet);
+
+        Subscription::batch(vec![key_events, app_events, dead_internet_subs])
     }
 
     pub fn view(&self) -> Element<'_, Message> {
+        let dead_internet = self.dead_internet.view().map(Message::DeadInternet);
         let buttons = row(self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>())
             .padding(padding::top(10))
             .width(Fill);
@@ -235,14 +244,14 @@ impl App {
         ];
 
         // main layout
-        container(content)
+        let main_layout = container(content)
             .width(Length::Fill)
             .height(Length::Fill)
             .style(|theme: &Theme| {
                 let palette = theme.palette();
 
                 container::Style {
-                    background: Some(iced::Background::Color(palette.background)),
+                    background: None,
                     border: Border::default()
                         .color(palette.text)
                         .rounded(2.0)
@@ -255,7 +264,8 @@ impl App {
                     ..Default::default()
                 }
             })
-            .padding(8)
-            .into()
+            .padding(8);
+
+        stack![dead_internet, main_layout].into()
     }
 }

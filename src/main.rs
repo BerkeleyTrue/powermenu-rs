@@ -1,6 +1,7 @@
 mod app;
 mod button;
-// mod dead_internet;
+mod atlas;
+mod dead_internet;
 
 use clap::Parser;
 use iced::{

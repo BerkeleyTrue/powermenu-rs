@@ -68,6 +68,50 @@
           ];
         };
         runtimeLibs = winitRuntimeLibs pkgs;
+        atlasConfig = {
+          input = "resources/redlotoo_dead-internet.mp4";
+          output = "resources/redlotoo_dead-internet-atlas.png";
+          # keep width under 4096px with 910px wide tiles
+          columns = 4;
+        };
+        atlasScript = pkgs.writeShellApplication {
+          name = "generate-atlas";
+          runtimeInputs = with pkgs; [
+            coreutils
+            ffmpeg
+            imagemagick
+          ];
+          text = ''
+            set -euo pipefail
+
+            input=${lib.escapeShellArg atlasConfig.input}
+            output=${lib.escapeShellArg atlasConfig.output}
+            columns=${toString atlasConfig.columns}
+
+            if [ ! -f "$input" ]; then
+              echo "Expected to find $input relative to the project root." >&2
+              exit 1
+            fi
+
+            frames_dir="$(mktemp -d)"
+            trap 'rm -rf "$frames_dir"' EXIT
+
+            # 15 fps, 512px tall, nearest neighbor scaling (ok for pixel art)
+            ffmpeg -hide_banner -loglevel error -i "$input" \
+              -vf "fps=15,scale=-2:512:flags=neighbor" \
+              -frames:v 30 \
+              -vsync 0 \
+              "$frames_dir/frame_%04d.png"
+
+            mkdir -p "$(dirname "$output")"
+            montage "$frames_dir"/frame_*.png \
+              -background none -alpha set \
+              -tile "$columns"x -geometry +0+0 \
+              "$output"
+
+            echo "Atlas saved to $output"
+          '';
+        };
       in {
         packages.default = mkPackage pkgs;
         formatter.default = pkgs.alejandra;
@@ -85,7 +129,7 @@
 
               openssl
             ])
-            ++ [pkgs.nixgl.nixGLMesa]
+            ++ [pkgs.nixgl.nixGLMesa atlasScript]
             ++ runtimeLibs;
 
           WINIT_UNIX_BACKEND = "wayland";
@@ -116,6 +160,8 @@
 
             menu
             just --list
+            echo
+            echo "Sprite atlas helper: run 'powermenu-atlas'"
           '';
         };
       };

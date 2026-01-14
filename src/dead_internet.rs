@@ -1,98 +1,42 @@
-use gtk4::gdk::{Paintable, Texture};
-use relm4::{
-    gtk::{self, gio, glib, prelude::*},
-    prelude::*,
-};
-use tracing::error;
+use iced::{Element, Subscription, Task, advanced::image, time};
 
-// embeds resource
-pub const GRESOURCE_BYTES: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/resources.gresource"));
+use crate::atlas::AtlasFrame;
 
-// resource id
-pub const RESOURCE_PREFIX: &str = "/com/bt/powermenu-rs";
+const DEAD_INTERNET_BYTES: &[u8] = include_bytes!("../resources/redlotoo_dead-internet-atlas.png");
+const FRAMES: u32 = 30;
 
-pub fn init_resources() {
-    // wraps the bytes?
-    let gbytes = glib::Bytes::from_static(GRESOURCE_BYTES);
-    // parses gresource format
-    let resource =
-        gio::Resource::from_data(&gbytes).expect("Failed to load dead_internet gresouce");
-    // register resource globally
-    gio::resources_register(&resource);
+#[derive(Debug, Clone)]
+pub enum Message {
+    Tick,
 }
 
 pub struct DeadInternet {
-    poster: Texture,
-    media: Option<gtk::MediaFile>,
+    handle: image::Handle,
+    index: u32,
 }
 
 impl DeadInternet {
-    fn load_media(&mut self) {
-        let file = gio::File::for_uri(&format!(
-            "resource://{RESOURCE_PREFIX}/redlotoo_dead-internet.mp4"
-        ));
-
-        let media = gtk::MediaFile::for_file(&file);
-
-        // Debug: check for errors
-        media.connect_error_notify(|media| {
-            if let Some(error) = media.error() {
-                error!("MediaFile error: {:?}", error);
-            }
-        });
-        media.set_loop(true);
-        media.play();
-        self.media = Some(media);
-    }
-}
-
-#[derive(Debug)]
-pub enum Messages {
-    LoadVideo,
-}
-
-#[relm4::component(pub)]
-impl SimpleComponent for DeadInternet {
-    type Init = ();
-    type Input = Messages;
-    type Output = ();
-
-    fn init(
-        _init: Self::Init,
-        root: Self::Root,
-        sender: relm4::ComponentSender<Self>,
-    ) -> relm4::ComponentParts<Self> {
-        let poster =
-            Texture::from_resource(&format!("{RESOURCE_PREFIX}/redlotoo_dead-internet.png"));
-        let model = DeadInternet {
-            poster,
-            media: None,
-        };
-
-        let widgets = view_output!();
-
-        root.connect_realize(move |_| {
-            sender.input(Messages::LoadVideo);
-        });
-
-        ComponentParts { model, widgets }
+    pub fn new() -> Self {
+        Self {
+            handle: image::Handle::from_bytes(DEAD_INTERNET_BYTES),
+            index: 0,
+        }
     }
 
-    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+    pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Messages::LoadVideo => {
-                self.load_media();
+            Message::Tick => {
+                self.index = (self.index + 1) % FRAMES;
             }
         }
+        Task::none()
     }
 
-    view! {
-        gtk::Picture {
-            add_css_class: "gif",
-            #[watch]
-            set_paintable: model.media.as_ref()
-                .map(|m| m.upcast_ref::<Paintable>())
-                .or(Some(model.poster.upcast_ref::<Paintable>())),
-        }
+    pub fn subscriptions(&self) -> Subscription<Message> {
+        time::every(time::Duration::from_millis(33)).map(|_| Message::Tick)
+    }
+
+    pub fn view(&self) -> Element<'_, Message> {
+        AtlasFrame::new(self.handle.clone(), 8, 910.0, 512.0, self.index).into()
     }
 }
