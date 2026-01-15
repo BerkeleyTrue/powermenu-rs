@@ -76,9 +76,10 @@ async fn get_user() -> Message {
 
 impl App {
     pub fn new(init: Init) -> (Self, Task<Message>) {
+        let (dead_internet, task) = dead_internet::DeadInternet::new();
         (
             App {
-                dead_internet: dead_internet::DeadInternet::new(),
+                dead_internet: dead_internet,
                 dryrun: init.dryrun,
                 no_focus: init.no_focus,
                 user: None,
@@ -105,7 +106,10 @@ impl App {
                     },
                 ],
             },
-            Task::future(get_user()),
+            Task::batch(vec![
+                Task::future(get_user()),
+                task.map(Message::DeadInternet),
+            ]),
         )
     }
 

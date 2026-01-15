@@ -1,4 +1,6 @@
-use iced::{Element, Subscription, Task, advanced::image, time};
+use iced::{Element, Subscription, Task, advanced::image, time, widget::Space};
+use tokio::task;
+use tracing::error;
 
 use crate::atlas::AtlasFrame;
 
@@ -8,19 +10,26 @@ const FRAMES: u32 = 30;
 #[derive(Debug, Clone)]
 pub enum Message {
     Tick,
+    VideoLoaded(Option<image::Handle>),
 }
 
+#[derive(Default)]
 pub struct DeadInternet {
-    handle: image::Handle,
+    handle: Option<image::Handle>,
     index: u32,
 }
 
 impl DeadInternet {
-    pub fn new() -> Self {
-        Self {
-            handle: image::Handle::from_bytes(DEAD_INTERNET_BYTES),
-            index: 0,
-        }
+    async fn load_video() -> Message {
+        let handle = task::spawn_blocking(|| image::Handle::from_bytes(DEAD_INTERNET_BYTES))
+            .await
+            .inspect_err(|err| error!("load image err: {err:?}"))
+            .ok();
+        Message::VideoLoaded(handle)
+    }
+
+    pub fn new() -> (Self, Task<Message>) {
+        (Self::default(), Task::future(DeadInternet::load_video()))
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -28,6 +37,7 @@ impl DeadInternet {
             Message::Tick => {
                 self.index = (self.index + 1) % FRAMES;
             }
+            Message::VideoLoaded(handle) => self.handle = handle,
         }
         Task::none()
     }
@@ -37,6 +47,9 @@ impl DeadInternet {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        AtlasFrame::new(self.handle.clone(), 8, 910.0, 512.0, self.index).into()
+        match self.handle.as_ref() {
+            Some(handle) => AtlasFrame::new(handle.clone(), 8, 910.0, 512.0, self.index).into(),
+            None => Space::default().into(),
+        }
     }
 }
