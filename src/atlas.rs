@@ -4,17 +4,17 @@ use iced::{
     mouse,
 };
 
-pub struct AtlasFrame {
-    handle: iced::advanced::image::Handle,
+pub struct AtlasFrame<'a> {
+    handle: &'a iced::advanced::image::Handle,
     cols: u32,
     tile_w: f32,
     tile_h: f32,
     index: u32,
 }
 
-impl AtlasFrame {
+impl<'a> AtlasFrame<'a> {
     pub fn new(
-        handle: iced::advanced::image::Handle,
+        handle: &'a iced::advanced::image::Handle,
         cols: u32,
         tile_w: f32,
         tile_h: f32,
@@ -30,7 +30,7 @@ impl AtlasFrame {
     }
 }
 
-impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer> for AtlasFrame
+impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer> for AtlasFrame<'a>
 where
     Renderer: iced::advanced::Renderer
         + iced::advanced::image::Renderer<Handle = iced::advanced::image::Handle>,
@@ -75,8 +75,8 @@ where
             layout,
             &self.handle,
             Some(crop),
-            iced::border::Radius::from(0.0),                    // border_radius
-            iced::ContentFit::Contain,                  // <-- contain!
+            iced::border::Radius::from(0.0), // border_radius
+            iced::ContentFit::Contain,       // <-- contain!
             iced::widget::image::FilterMethod::Nearest, // pixel art
             iced::Rotation::default(),
             1.0, // opacity
@@ -85,12 +85,12 @@ where
     }
 }
 
-impl<'a, Message, Theme, Renderer> From<AtlasFrame> for Element<'a, Message, Theme, Renderer>
+impl<'a, Message, Theme, Renderer> From<AtlasFrame<'a>> for Element<'a, Message, Theme, Renderer>
 where
     Renderer: iced::advanced::Renderer
         + iced::advanced::image::Renderer<Handle = iced::advanced::image::Handle>,
 {
-    fn from(w: AtlasFrame) -> Self {
+    fn from(w: AtlasFrame<'a>) -> Self {
         Element::new(w)
     }
 }

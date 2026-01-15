@@ -43,12 +43,12 @@ impl DeadInternet {
     }
 
     pub fn subscriptions(&self) -> Subscription<Message> {
-        time::every(time::Duration::from_millis(33)).map(|_| Message::Tick)
+        time::every(time::Duration::from_millis(200)).map(|_| Message::Tick)
     }
 
     pub fn view(&self) -> Element<'_, Message> {
         match self.handle.as_ref() {
-            Some(handle) => AtlasFrame::new(handle.clone(), 8, 910.0, 512.0, self.index).into(),
+            Some(handle) => AtlasFrame::new(handle, 8, 910.0, 512.0, self.index).into(),
             None => Space::default().into(),
         }
     }
