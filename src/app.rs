@@ -16,9 +16,6 @@ use crate::{
     palette::LINEAR_BACKGROUND,
 };
 
-pub const SIZE: (u32, u32) = (623, 390);
-pub const REM: f32 = 14.0;
-
 #[derive(Clone)]
 pub struct Init {
     pub no_focus: bool,

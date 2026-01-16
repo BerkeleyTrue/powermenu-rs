@@ -46,3 +46,5 @@ pub const LINEAR_BACKGROUND: Background = Background::Gradient(Gradient::Linear(
         None,
     ],
 }));
+
+pub const REM: u32 = 14;

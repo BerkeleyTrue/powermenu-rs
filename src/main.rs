@@ -2,24 +2,12 @@ mod app;
 mod atlas;
 mod button;
 mod dead_internet;
+mod layershell;
 mod palette;
 
 use clap::Parser;
-use iced::{
-    Color, Element, Length::Fill, Subscription, Task, Theme, theme::Style, widget::container,
-};
-use iced_layershell::{
-    reexport::{Anchor, KeyboardInteractivity},
-    settings::LayerShellSettings,
-    to_layer_message,
-};
 use tracing::{Level, debug};
 use tracing_subscriber::FmtSubscriber;
-
-use crate::{
-    app::{REM, SIZE},
-    palette::PALETTE,
-};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -33,43 +21,6 @@ struct Cli {
     /// don't run commands, echo them out instead
     #[arg(short, long)]
     dryrun: bool,
-}
-
-#[to_layer_message]
-#[derive(Debug)]
-enum Message {
-    App(app::Message),
-}
-
-struct LayerApp {
-    app: app::App,
-}
-
-impl LayerApp {
-    fn new(init: app::Init) -> (Self, Task<Message>) {
-        let (app, task) = app::App::new(init);
-        (Self { app }, task.map(Message::App))
-    }
-
-    fn update(&mut self, message: Message) -> Task<Message> {
-        match message {
-            Message::App(message) => self.app.update(message).map(Message::App),
-            _ => Task::none(),
-        }
-    }
-
-    fn view(&self) -> Element<'_, Message> {
-        container(self.app.view().map(Message::App))
-            .style(container::transparent)
-            .height(Fill)
-            .width(Fill)
-            .padding(REM)
-            .into()
-    }
-
-    fn subscription(&self) -> Subscription<Message> {
-        self.app.subscription().map(Message::App)
-    }
 }
 
 fn main() -> iced_layershell::Result {
@@ -94,25 +45,7 @@ fn main() -> iced_layershell::Result {
         println!("Powermenu: Running in dryrun mode");
     }
 
-    let model_init = app::Init::from(args);
+    let init = app::Init::from(args);
 
-    iced_layershell::application(
-        move || LayerApp::new(model_init.clone()),
-        || "Powermenu".to_string(),
-        LayerApp::update,
-        LayerApp::view,
-    )
-    .layer_settings(LayerShellSettings {
-        size: Some(SIZE).map(|(w, h)| (w + REM as u32, h + REM as u32)),
-        anchor: Anchor::empty(),
-        keyboard_interactivity: KeyboardInteractivity::OnDemand,
-        ..Default::default()
-    })
-    .theme(Theme::custom("dead_internet", PALETTE))
-    .style(|_layer, theme| Style {
-        background_color: Color::TRANSPARENT,
-        text_color: theme.palette().text,
-    })
-    .subscription(LayerApp::subscription)
-    .run()
+    layershell::start(init)
 }
