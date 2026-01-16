@@ -196,6 +196,7 @@ impl App {
     pub fn view(&self) -> Element<'_, Message> {
         let dead_internet = self.dead_internet.view().map(Message::DeadInternet);
         let buttons = row(self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>())
+            .spacing(10)
             .padding(padding::top(10))
             .width(Fill);
 
@@ -241,12 +242,10 @@ impl App {
                     .padding(1);
                 container(outer_box).width(Fill)
             })
-            .unwrap_or_else(|| container(space()).width(Fill));
+            .or(Some(container(space()).width(Fill)))
+            .map(|cont| row![cont].padding(Padding::from([25, 25])));
 
-        let content = column![
-            buttons,
-            row![user_container].padding(Padding::from([15, 55]))
-        ];
+        let content = column![buttons, user_container].padding(Padding::default().horizontal(10));
 
         // main layout
         let main_layout = container(content)
