@@ -3,11 +3,15 @@ use iced::{
     Length::Fill,
     Theme,
     advanced::widget::text,
-    widget::{Button, button, container},
+    widget::{
+        Button,
+        button::{self, Status},
+        container,
+    },
 };
 use iced_font_awesome::fa_icon_solid;
 
-use crate::palette::LINEAR_BACKGROUND;
+use crate::palette::{LINEAR_BACKGROUND, LINEAR_BACKGROUND_FOCUS};
 
 pub enum Icon {
     Lock,
@@ -40,11 +44,14 @@ impl<T: Clone + 'static> PowerButton<T> {
         .size(15.0);
 
         let button = Button::new(container(icon).center(Fill))
-            .style(|theme: &Theme, _| {
+            .style(|theme: &Theme, status| {
                 let palette = theme.palette();
 
                 button::Style {
-                    background: Some(LINEAR_BACKGROUND),
+                    background: match status {
+                        Status::Hovered | Status::Pressed => Some(LINEAR_BACKGROUND_FOCUS),
+                        _ => Some(LINEAR_BACKGROUND),
+                    },
                     border: Border::default()
                         .rounded(1.0)
                         .color(palette.background)
