@@ -16,6 +16,8 @@ use crate::{
     palette::LINEAR_BACKGROUND,
 };
 
+const NUM_OF_BTNS: usize = 5;
+
 #[derive(Clone)]
 pub struct Init {
     pub no_focus: bool,
@@ -31,10 +33,35 @@ impl From<Cli> for Init {
     }
 }
 
+struct FocusButton(usize);
+impl FocusButton {
+    fn new() -> Self {
+        Self(0)
+    }
+    fn next(&mut self) {
+        self.0 = if self.0 == (NUM_OF_BTNS - 1) {
+            self.0
+        } else {
+            self.0 + 1
+        };
+    }
+    fn prev(&mut self) {
+        self.0 = if self.0 == 0 { self.0 } else { self.0 - 1 }
+    }
+    fn is_focused(&self, idx: usize) -> bool {
+        self.0 == idx
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Message {
     User(String, Option<String>),
     DeadInternet(dead_internet::Message),
+
+    FocusNext,
+    FocusPrev,
+    Select,
+
     Lock,
     Sleep,
     Shutdown,
@@ -49,7 +76,8 @@ pub struct App {
     dryrun: bool,
     user: Option<String>,
     no_focus: bool,
-    buttons: Vec<PowerButton<Message>>,
+    buttons: [PowerButton<Message>; NUM_OF_BTNS],
+    focused_btn: FocusButton,
 }
 
 async fn get_user() -> Message {
@@ -80,7 +108,8 @@ impl App {
                 dryrun: init.dryrun,
                 no_focus: init.no_focus,
                 user: None,
-                buttons: vec![
+                focused_btn: FocusButton::new(),
+                buttons: [
                     PowerButton {
                         icon: Icon::Lock,
                         message: Message::Lock,
@@ -129,6 +158,24 @@ impl App {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::QuitApp => exit(),
+
+            Message::FocusNext => {
+                self.focused_btn.next();
+                Task::none()
+            }
+            Message::FocusPrev => {
+                self.focused_btn.prev();
+                Task::none()
+            }
+            Message::Select => match self.focused_btn.0 {
+                0 => Task::done(Message::Lock),
+                1 => Task::done(Message::Sleep),
+                2 => Task::done(Message::Reboot),
+                3 => Task::done(Message::Shutdown),
+                4 => Task::done(Message::Logout),
+                _ => Task::none(),
+            },
+
             Message::Lock => {
                 info!("Lock Request");
                 self.command("loginctl", vec!["lock-session"])
@@ -165,7 +212,7 @@ impl App {
 
     pub fn subscription(&self) -> Subscription<Message> {
         let no_focus = self.no_focus.clone();
-        let key_events = keyboard::listen()
+        let quit_bindings = keyboard::listen()
             .filter_map(|event| match event {
                 keyboard::Event::KeyPressed { key, .. } => Some(key),
                 _ => None,
@@ -182,20 +229,42 @@ impl App {
         .with(no_focus)
         .filter_map(move |(no_focus, e)| if no_focus { None } else { Some(e) });
 
+        let nav_bindings = keyboard::listen()
+            .filter_map(|event| match event {
+                keyboard::Event::KeyPressed { key, .. } => Some(key),
+                _ => None,
+            })
+            .filter_map(|key| match key.as_ref() {
+                Key::Character("l") | Key::Character("j") => Some(Message::FocusNext),
+                Key::Character("h") | Key::Character("k") => Some(Message::FocusPrev),
+                Key::Named(Named::Enter) => Some(Message::Select),
+                _ => None,
+            });
+
         let dead_internet_subs = self
             .dead_internet
             .subscriptions()
             .map(Message::DeadInternet);
 
-        Subscription::batch(vec![key_events, app_events, dead_internet_subs])
+        Subscription::batch(vec![
+            quit_bindings,
+            nav_bindings,
+            app_events,
+            dead_internet_subs,
+        ])
     }
 
     pub fn view(&self) -> Element<'_, Message> {
         let dead_internet = self.dead_internet.view().map(Message::DeadInternet);
-        let buttons = row(self.buttons.iter().map(|b| b.view()).collect::<Vec<_>>())
-            .spacing(10)
-            .padding(padding::top(10))
-            .width(Fill);
+        let buttons = row(self
+            .buttons
+            .iter()
+            .enumerate()
+            .map(|(idx, b)| b.view(self.focused_btn.is_focused(idx)))
+            .collect::<Vec<_>>())
+        .spacing(10)
+        .padding(padding::top(10))
+        .width(Fill);
 
         let user_container = self
             .user

@@ -27,7 +27,7 @@ pub struct PowerButton<T> {
 }
 
 impl<T: Clone + 'static> PowerButton<T> {
-    pub fn view(&self) -> Element<'static, T> {
+    pub fn view(&self, is_focused: bool) -> Element<'static, T> {
         let icon = (match self.icon {
             Icon::Lock => fa_icon_solid("lock"),
             Icon::Sleep => fa_icon_solid("moon"),
@@ -44,12 +44,13 @@ impl<T: Clone + 'static> PowerButton<T> {
         .size(15.0);
 
         let button = Button::new(container(icon).center(Fill))
-            .style(|theme: &Theme, status| {
+            .style(move |theme: &Theme, status| {
                 let palette = theme.palette();
 
                 button::Style {
-                    background: match status {
-                        Status::Hovered | Status::Pressed => Some(LINEAR_BACKGROUND_FOCUS),
+                    background: match (status, is_focused) {
+                        (Status::Hovered | Status::Pressed, _) => Some(LINEAR_BACKGROUND_FOCUS),
+                        (_, true) => Some(LINEAR_BACKGROUND_FOCUS),
                         _ => Some(LINEAR_BACKGROUND),
                     },
                     border: Border::default()
