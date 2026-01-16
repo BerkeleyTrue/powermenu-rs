@@ -1,15 +1,12 @@
 mod app;
-mod button;
 mod atlas;
+mod button;
 mod dead_internet;
+mod palette;
 
 use clap::Parser;
 use iced::{
-    Color, Element,
-    Length::Fill,
-    Subscription, Task, Theme, color,
-    theme::{self, Style},
-    widget::container,
+    Color, Element, Length::Fill, Subscription, Task, Theme, theme::Style, widget::container,
 };
 use iced_layershell::{
     reexport::{Anchor, KeyboardInteractivity},
@@ -19,7 +16,10 @@ use iced_layershell::{
 use tracing::{Level, debug};
 use tracing_subscriber::FmtSubscriber;
 
-use crate::app::{REM, SIZE};
+use crate::{
+    app::{REM, SIZE},
+    palette::PALETTE,
+};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -108,17 +108,7 @@ fn main() -> iced_layershell::Result {
         keyboard_interactivity: KeyboardInteractivity::OnDemand,
         ..Default::default()
     })
-    .theme(Theme::custom(
-        "dead_internet",
-        theme::Palette {
-            background: color!(0x170f2b),
-            text: color!(0xffe3de),
-            primary: color!(0xff8bbb),
-            success: color!(0xa955e8),
-            warning: Color::default(),
-            danger: Color::default(),
-        },
-    ))
+    .theme(Theme::custom("dead_internet", PALETTE))
     .style(|_layer, theme| Style {
         background_color: Color::TRANSPARENT,
         text_color: theme.palette().text,

@@ -13,7 +13,7 @@ use tracing::{debug, info};
 use crate::{
     Cli,
     button::{Icon, PowerButton},
-    dead_internet,
+    dead_internet, palette::LINEAR_BACKGROUND,
 };
 
 pub const SIZE: (u32, u32) = (623, 390);
@@ -210,15 +210,7 @@ impl App {
                         let palette = theme.palette();
 
                         container::Style {
-                            background: Some(
-                                Linear::new(Radians::PI)
-                                    .add_stop(0.0, palette.text)
-                                    .add_stop(0.80, palette.text)
-                                    .add_stop(0.81, palette.primary)
-                                    .add_stop(0.87, palette.primary)
-                                    .add_stop(0.88, palette.success)
-                                    .into(),
-                            ),
+                            background: Some(LINEAR_BACKGROUND),
                             border: Border::default()
                                 .rounded(1.0)
                                 .color(palette.background)

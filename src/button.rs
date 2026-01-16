@@ -8,6 +8,8 @@ use iced::{
 };
 use iced_font_awesome::fa_icon_solid;
 
+use crate::palette::LINEAR_BACKGROUND;
+
 pub enum Icon {
     Lock,
     Sleep,
@@ -43,15 +45,7 @@ impl<T: Clone + 'static> PowerButton<T> {
                 let palette = theme.palette();
 
                 button::Style {
-                    background: Some(
-                        Linear::new(Radians::PI)
-                            .add_stop(0.0, palette.text)
-                            .add_stop(0.80, palette.text)
-                            .add_stop(0.81, palette.primary)
-                            .add_stop(0.87, palette.primary)
-                            .add_stop(0.88, palette.success)
-                            .into(),
-                    ),
+                    background: Some(LINEAR_BACKGROUND),
                     border: Border::default()
                         .rounded(1.0)
                         .color(palette.background)
