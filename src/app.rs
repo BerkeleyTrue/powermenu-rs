@@ -234,6 +234,7 @@ impl App {
                                 .rounded(1.0)
                                 .color(palette.text)
                                 .width(2.0),
+                            text_color: Some(palette.background),
                             ..Default::default()
                         }
                     })
