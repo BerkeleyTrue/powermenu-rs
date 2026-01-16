@@ -41,8 +41,9 @@
 
         # runtime
         buildInputs = runtimeLibs;
-        preFixup = ''
-          --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath runtimeLibs}"
+        postFixup = ''
+          wrapProgram $out/bin/${manifest.name} \
+            --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath runtimeLibs}"
         '';
         meta = with pkgs.lib; {
           description = "Powermenu in rust and relm4";

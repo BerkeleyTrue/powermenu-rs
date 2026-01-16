@@ -1,8 +1,7 @@
 use iced::{
     Border, Color, Element, Event,
     Length::{self, Fill},
-    Padding, Radians, Shadow, Subscription, Task, Theme, Vector, event, exit,
-    gradient::Linear,
+    Padding, Shadow, Subscription, Task, Theme, Vector, event, exit,
     keyboard::{self, Key, key::Named},
     padding,
     widget::{column, container, row, space, stack, text},
@@ -13,7 +12,8 @@ use tracing::{debug, info};
 use crate::{
     Cli,
     button::{Icon, PowerButton},
-    dead_internet, palette::LINEAR_BACKGROUND,
+    dead_internet,
+    palette::LINEAR_BACKGROUND,
 };
 
 pub const SIZE: (u32, u32) = (623, 390);

@@ -1,9 +1,8 @@
 use iced::{
     Border, Element,
     Length::Fill,
-    Radians, Theme,
+    Theme,
     advanced::widget::text,
-    gradient::Linear,
     widget::{Button, button, container},
 };
 use iced_font_awesome::fa_icon_solid;
