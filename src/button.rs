@@ -60,7 +60,7 @@ impl<T: Clone + 'static> PowerButton<T> {
                 }
             })
             .padding(10)
-            .width(80)
+            .width(Fill)
             .height(40)
             .on_press(self.message.clone());
 
