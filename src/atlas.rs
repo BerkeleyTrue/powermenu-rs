@@ -36,8 +36,7 @@ where
         + iced::advanced::image::Renderer<Handle = iced::advanced::image::Handle>,
 {
     fn size(&self) -> Size<Length> {
-        // Make it behave like a background: take all available space.
-        Size::new(Length::Fill, Length::Fill)
+        Size::new(Length::Fixed(self.tile_w), Length::Fixed(self.tile_h))
     }
 
     fn layout(
@@ -75,9 +74,9 @@ where
             layout,
             &self.handle,
             Some(crop),
-            iced::border::Radius::from(0.0), // border_radius
-            iced::ContentFit::Contain,       // <-- contain!
-            iced::widget::image::FilterMethod::Nearest, // pixel art
+            iced::border::Radius::from(0.0),
+            iced::ContentFit::Contain,
+            iced::widget::image::FilterMethod::Nearest,
             iced::Rotation::default(),
             1.0, // opacity
             1.0, // scale
