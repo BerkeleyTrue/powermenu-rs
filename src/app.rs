@@ -235,8 +235,8 @@ impl App {
                 _ => None,
             })
             .filter_map(|key| match key.as_ref() {
-                Key::Character("l") | Key::Character("j") => Some(Message::FocusNext),
-                Key::Character("h") | Key::Character("k") => Some(Message::FocusPrev),
+                Key::Character("l") | Key::Named(Named::ArrowLeft) => Some(Message::FocusNext),
+                Key::Character("h") | Key::Named(Named::ArrowRight) => Some(Message::FocusPrev),
                 Key::Named(Named::Enter) => Some(Message::Select),
                 _ => None,
             });
