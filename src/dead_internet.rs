@@ -6,7 +6,7 @@ use crate::atlas::AtlasFrame;
 
 const GIF_BYTES: &[u8] = include_bytes!("../resources/redlotoo_dead-internet-atlas.png");
 const POSTER_BYTES: &[u8] = include_bytes!("../resources/redlotoo_dead-internet.png");
-const FRAMES: u32 = 30;
+const FRAMES: u32 = 43;
 
 #[derive(Debug, Clone)]
 pub enum Message {

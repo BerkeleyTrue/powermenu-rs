@@ -78,6 +78,7 @@
         atlasScript = pkgs.writeShellApplication {
           name = "generate-atlas";
           runtimeInputs = with pkgs; [
+            bc
             coreutils
             ffmpeg
             imagemagick
@@ -88,19 +89,29 @@
             input=${lib.escapeShellArg atlasConfig.input}
             output=${lib.escapeShellArg atlasConfig.output}
             columns=${toString atlasConfig.columns}
+            target_fps=15
 
             if [ ! -f "$input" ]; then
               echo "Expected to find $input relative to the project root." >&2
               exit 1
             fi
 
+            # Get video duration and calculate frame count at target FPS
+            duration=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$input")
+            # Calculate: duration * fps, rounded to nearest integer
+            frame_count=$(printf "%.0f" "$(echo "$duration * $target_fps" | bc -l)")
+
+            echo "Video duration: $duration seconds"
+            echo "Target FPS: $target_fps"
+            echo "Will extract $frame_count frames"
+
             frames_dir="$(mktemp -d)"
             trap 'rm -rf "$frames_dir"' EXIT
 
-            # 15 fps, 512px tall, nearest neighbor scaling (ok for pixel art)
+            # Extract frames at target fps, 512px tall, nearest neighbor scaling (ok for pixel art)
             ffmpeg -hide_banner -loglevel error -i "$input" \
-              -vf "fps=15,scale=-2:512:flags=neighbor" \
-              -frames:v 30 \
+              -vf "fps=$target_fps,scale=-2:512:flags=neighbor" \
+              -frames:v "$frame_count" \
               -vsync 0 \
               "$frames_dir/frame_%04d.png"
 
@@ -110,7 +121,8 @@
               -tile "$columns"x -geometry +0+0 \
               "$output"
 
-            echo "Atlas saved to $output"
+            echo "Atlas saved to $output with $frame_count frames"
+            echo "Update FRAMES constant in src/dead_internet.rs to: $frame_count"
           '';
         };
       in {
