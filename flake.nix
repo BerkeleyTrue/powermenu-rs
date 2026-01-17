@@ -1,5 +1,5 @@
 {
-  description = "Powermenu in rust and relm4";
+  description = "Powermenu in Iced-rs";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
@@ -46,7 +46,7 @@
             --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath runtimeLibs}"
         '';
         meta = with pkgs.lib; {
-          description = "Powermenu in rust and relm4";
+          description = "Powermenu in rust and iced-rs";
           license = licenses.mit;
           mainProgram = manifest.name;
         };
@@ -173,8 +173,6 @@
 
             menu
             just --list
-            echo
-            echo "Sprite atlas helper: run 'powermenu-atlas'"
           '';
         };
       };
